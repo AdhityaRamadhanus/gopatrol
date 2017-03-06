@@ -54,6 +54,7 @@ message ListEndpointResponse {
 	message Endpoint {
 		string name = 1;
 		string url = 2;
+		string status = 3;
 	}
 	repeated Endpoint endpoints = 1;
 }

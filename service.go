@@ -104,12 +104,31 @@ func (handler *ServiceHandler) ListEndpoint(ctx context.Context, request *checku
 	var response = &checkupservice.ListEndpointResponse{
 		Endpoints: []*checkupservice.ListEndpointResponse_Endpoint{},
 	}
-	for _, checker := range handler.CheckupServer.Checkers {
-		response.Endpoints = append(response.Endpoints, &checkupservice.ListEndpointResponse_Endpoint{
-			Name: checker.GetName(),
-			Url:  checker.GetURL(),
-		})
+	var err error
+	if request.Check == true {
+		results, err := handler.CheckupServer.Check()
+		if err != nil {
+			log.Println("Error Checking", err)
+		}
+		for _, result := range results {
+			statusMessage := "Healthy"
+			if result.Down == true {
+				statusMessage = "Down"
+			}
+			response.Endpoints = append(response.Endpoints, &checkupservice.ListEndpointResponse_Endpoint{
+				Name:   result.Title,
+				Url:    result.Endpoint,
+				Status: statusMessage,
+			})
+		}
+	} else {
+		for _, checker := range handler.CheckupServer.Checkers {
+			response.Endpoints = append(response.Endpoints, &checkupservice.ListEndpointResponse_Endpoint{
+				Name: checker.GetName(),
+				Url:  checker.GetURL(),
+			})
+		}
 	}
 	handler.globalLock.RUnlock()
-	return response, nil
+	return response, err
 }
