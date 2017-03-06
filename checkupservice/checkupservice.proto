@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package checkupservice;
+
+// The checkup service definition.
+service checkup {
+	// Endpoint Manipulation Function
+	rpc AddHttpEndpoint (HttpEndpointRequest) returns (EndpointResponse) {}
+	rpc AddTcpEndpoint (TcpEndpointRequest) returns (EndpointResponse) {}
+	rpc DeleteEndpoint (InquiryEndpointRequest) returns (EndpointResponse) {}
+
+	// Endpoint Inspection Function
+	rpc ListEndpoint (ListEndpointRequest) returns (ListEndpointResponse) {}
+	// rpc InspectEndpoint (InquiryEndpointRequest) returns (InquiryResponse) {}
+}
+
+message GenericEndpointRequest {
+	string name = 1;
+	string url = 2;
+	int32 attempts = 3;
+}
+
+message HttpEndpointRequest {
+	GenericEndpointRequest endpoint = 1;
+}
+
+message TcpEndpointRequest {
+	GenericEndpointRequest endpoint = 1;
+	bool tls = 2;
+	string tls_skip_verify = 3;
+	string tls_ca_file = 4;
+}
+
+message InquiryEndpointRequest {
+	string name = 1;
+}
+
+message EndpointResponse {
+	string message = 1;
+}
+
+message InquiryResponse {
+	string name = 1;
+	string url = 2;
+	string status = 3;
+}
+
+message ListEndpointRequest {
+	bool check = 1;
+}
+
+
+message ListEndpointResponse {
+	message Endpoint {
+		string name = 1;
+		string url = 2;
+	}
+	repeated Endpoint endpoints = 1;
+}
