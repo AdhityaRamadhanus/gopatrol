@@ -8,7 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/AdhityaRamadhanus/checkup-server/checkupservice"
+	checkupgrpc "github.com/AdhityaRamadhanus/checkupd/grpc"
+	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -25,10 +26,7 @@ func fatalErr(err error) {
 
 func main() {
 	flag.Parse()
-	serviceHandler, err := NewServiceHandler(*configFile)
-	for _, checker := range serviceHandler.CheckupServer.Checkers {
-		log.Println(checker.GetName())
-	}
+	serviceHandler, err := checkupgrpc.NewServiceHandler(*configFile)
 
 	if err != nil {
 		fatalErr(err)
@@ -50,10 +48,13 @@ func main() {
 	go func() {
 		<-termChan
 		log.Println("Tcp Server is Shutting down")
+		if err := serviceHandler.Serialize(); err != nil {
+			log.Println("Failed to save checkup.json", err)
+		}
 		tcpServer.GracefulStop()
 	}()
 
-	go serviceHandler.runCheck()
+	go serviceHandler.Run()
 	// Checkup Goroutine
 
 	log.Println("Tcp server is running at ", *portService)

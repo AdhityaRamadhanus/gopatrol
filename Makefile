@@ -1,26 +1,41 @@
-.PHONY: clean
-.PHONY: test
+.PHONY: default clean
 
-# Flags #
-GO_FLAGS = -o
+CLI_NAME = checklist
+DAEMON_NAME = checkupd
+OS := $(shell uname)
+VERSION ?= 1.0.0
 
-# path config #
-PROTO_DIR=checkupservice/
-PROTO_FILE=checkupservice.proto
-
-# protoc
-PROTOC_BIN=~/protoc/bin/protoc
-PROTOC_OPTS=--go_out=plugins=grpc:checkupservice
+# test target
 
 # target #
 
-default: clean build_protoc build_checkup
+default: clean build_checkupd build_checklist
 
-build_protoc:
-	$(PROTOC_BIN) -I $(PROTO_DIR) $(PROTO_DIR)$(PROTO_FILE) $(PROTOC_OPTS)
+build_checkupd: 
+	@echo "Setup checkupd"
+ifeq ($(OS),Linux)
+	mkdir -p build/linux
+	@echo "Build checkupd..."
+	GOOS=linux  go build -ldflags "-s -w -X main.Version=$(VERSION)" -o build/linux/$(DAEMON_NAME) cmd/server/main.go
+endif
+ifeq ($(OS) ,Darwin)
+	@echo "Build checkupd..."
+	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/mac/$(DAEMON_NAME) cmd/server/main.go
+endif
+	@echo "Succesfully Build for ${OS} version:= ${VERSION}"
 
-build_checkup: 
-	go build $(GO_FLAGS) checkup-server
+build_checklist: 
+	@echo "Setup checklist"
+ifeq ($(OS),Linux)
+	mkdir -p build/linux
+	@echo "Build checklist..."
+	GOOS=linux  go build -ldflags "-s -w -X main.Version=$(VERSION)" -o build/linux/$(CLI_NAME) cmd/cli/main.go
+endif
+ifeq ($(OS) ,Darwin)
+	@echo "Build checklist..."
+	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/mac/$(CLI_NAME) cmd/cli/main.go
+endif
+	@echo "Succesfully Build for ${OS} version:= ${VERSION}"
 
 clean:
-	-rm checkup-server
+	rm -rf build/*

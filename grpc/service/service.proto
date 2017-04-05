@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package checkupservice;
+package service;
 
 // The checkup service definition.
 service checkup {
