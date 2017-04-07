@@ -77,4 +77,21 @@ var Commands = cli.Commands{
 			},
 		},
 	},
+	{
+		Name:   "delete",
+		Usage:  "delete endpoint",
+		Action: deleteEndpoint,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "host",
+				Value: ":9009",
+				Usage: "grpc server address",
+			},
+			cli.StringFlag{
+				Name:  "name",
+				Value: "",
+				Usage: "endpoint name",
+			},
+		},
+	},
 }

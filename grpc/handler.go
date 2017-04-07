@@ -59,7 +59,6 @@ func (handler *ServiceHandler) SerializeJSON() error {
 	if err != nil {
 		return err
 	}
-	log.Println(handler.ConfigPath)
 	file, err := os.OpenFile(handler.ConfigPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer file.Close()
 	if err != nil {
