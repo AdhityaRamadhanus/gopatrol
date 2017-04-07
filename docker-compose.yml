@@ -1,0 +1,7 @@
+version: '2'
+services:
+  checkupd:
+    image: checkupd:v1.0.0
+    container_name: checkupd
+    volumes:
+      - "./checkup.json:/checkup/checkup.json"
