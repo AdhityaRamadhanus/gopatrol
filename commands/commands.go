@@ -6,9 +6,9 @@ import (
 
 var Commands = cli.Commands{
 	{
-		Name:   "add",
+		Name:   "add-http",
 		Usage:  "Add endpoints to checkup",
-		Action: addEndpoint,
+		Action: addHTTPEndpoint,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "name",
@@ -19,6 +19,32 @@ var Commands = cli.Commands{
 				Name:  "url",
 				Value: "",
 				Usage: "URL to check",
+			},
+			cli.StringFlag{
+				Name:  "host",
+				Value: ":9009",
+				Usage: "grpc server address",
+			},
+		},
+	},
+	{
+		Name:   "add-tcp",
+		Usage:  "Add tcp endpoints to checkup",
+		Action: addTCPEndpoint,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "name",
+				Value: "",
+				Usage: "Name of endpoint",
+			},
+			cli.StringFlag{
+				Name:  "address",
+				Value: "",
+				Usage: "Address to check",
+			},
+			cli.BoolFlag{
+				Name:  "tls",
+				Usage: "Is it tls endpoint?",
 			},
 			cli.StringFlag{
 				Name:  "host",
