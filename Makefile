@@ -11,6 +11,9 @@ VERSION ?= 1.0.0
 
 default: clean build_checkupd build_checklist
 
+build_docker: 
+	docker build --tag checkupd:v${VERSION} .
+
 build_checkupd: 
 	@echo "Setup checkupd"
 ifeq ($(OS),Linux)

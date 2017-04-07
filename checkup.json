@@ -1,1 +1,1 @@
-{"storage":{"provider":"fs","dir":"/checkup/logs","url":""},"checkers":[{"type":"http","endpoint_name":"heroku","endpoint_url":"http://micro-url.herokuapp.com","attempts":5}],"timestamp":"0001-01-01T00:00:00Z"}
+{"storage":{"provider":"fs","dir":"/checkup/logs","url":""},"checkers":[{"type":"http","endpoint_name":"heroku","endpoint_url":"http://micro-url.herokuapp.com","attempts":5},{"type":"tcp","endpoint_name":"tokopedia","endpoint_url":"tokopedia.com:443","tls":true,"attempts":5}],"timestamp":"0001-01-01T00:00:00Z"}

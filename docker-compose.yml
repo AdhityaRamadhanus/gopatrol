@@ -3,5 +3,8 @@ services:
   checkupd:
     image: checkupd:v1.0.0
     container_name: checkupd
+    ports:
+      - "9009:9009"
     volumes:
       - "./checkup.json:/checkup/checkup.json"
+      - "./logs:/checkup/logs"
