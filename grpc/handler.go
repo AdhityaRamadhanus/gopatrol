@@ -41,8 +41,9 @@ func NewServiceHandler(configFile string) (*ServiceHandler, error) {
 
 func (handler *ServiceHandler) Run() {
 	for {
+		timer := time.After(time.Second * 10)
 		select {
-		case <-time.After(time.Second * 10): //hardcoded for now
+		case <-timer: //hardcoded for now
 			// Obtain Lock, makesure no function updating the Checkers
 			handler.globalLock.RLock()
 			if err := handler.CheckupServer.CheckAndStore(); err != nil {
@@ -53,13 +54,13 @@ func (handler *ServiceHandler) Run() {
 	}
 }
 
-func (handler *ServiceHandler) Serialize() error {
+func (handler *ServiceHandler) SerializeJSON() error {
 	jsonBytes, err := handler.CheckupServer.MarshalJSON()
 	if err != nil {
 		return err
 	}
 	log.Println(handler.ConfigPath)
-	file, err := os.OpenFile(handler.ConfigPath, os.O_CREATE|os.O_RDWR, 0777)
+	file, err := os.OpenFile(handler.ConfigPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer file.Close()
 	if err != nil {
 		return errors.Wrap(err, "Failed opening file")

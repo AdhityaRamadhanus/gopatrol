@@ -48,7 +48,7 @@ func main() {
 	go func() {
 		<-termChan
 		log.Println("Tcp Server is Shutting down")
-		if err := serviceHandler.Serialize(); err != nil {
+		if err := serviceHandler.SerializeJSON(); err != nil {
 			log.Println("Failed to save checkup.json", err)
 		}
 		tcpServer.GracefulStop()
