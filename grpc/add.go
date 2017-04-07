@@ -14,9 +14,10 @@ func (handler *ServiceHandler) AddTcpEndpoint(ctx context.Context, request *chec
 	handler.globalLock.Lock()
 	defer handler.globalLock.Unlock()
 	tcpChecker := checkup.TCPChecker{
-		Name:     request.Endpoint.Name,
-		URL:      request.Endpoint.Url,
-		Attempts: 5,
+		Name:       request.Endpoint.Name,
+		URL:        request.Endpoint.Url,
+		Attempts:   5,
+		TLSEnabled: request.Tls,
 	}
 	handler.CheckupServer.Checkers = append(handler.CheckupServer.Checkers, tcpChecker)
 	message := fmt.Sprintf("Tcp Endpoint %s->%s Added", tcpChecker.Name, tcpChecker.URL)
