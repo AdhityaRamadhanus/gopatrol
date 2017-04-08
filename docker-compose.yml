@@ -3,8 +3,23 @@ services:
   checkupd:
     image: checkupd:v1.0.0
     container_name: checkupd
+    restart: always
     ports:
       - "9009:9009"
+    network_mode: "host"
     volumes:
       - "./checkup.json:/checkup/checkup.json"
       - "./logs:/checkup/logs"
+  statuspage:
+    image: abiosoft/caddy
+    container_name: caddy
+    restart: always
+    ports:
+    - "80:80"
+    - "443:443"
+    volumes:
+    - "./logs:/statuspage/logs"
+    - "./statuspage:/statuspage"
+    - "./Caddyfile:/etc/Caddyfile"
+    - "./caddy-logs:/root/.caddy/logs"
+    - "./caddy-errors:/root/.caddy/errors"
