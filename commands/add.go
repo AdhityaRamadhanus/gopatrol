@@ -17,7 +17,7 @@ func addHTTPEndpoint(cliContext *cli.Context) {
 	defer conn.Close()
 	c := checkupservice.NewCheckupClient(conn)
 
-	r, err := c.AddHttpEndpoint(context.Background(), &checkupservice.HttpEndpointRequest{
+	r, err := c.AddHTTPEndpoint(context.Background(), &checkupservice.HttpEndpointRequest{
 		Endpoint: &checkupservice.GenericEndpointRequest{
 			Name:     cliContext.String("name"),
 			Url:      cliContext.String("url"),
@@ -26,7 +26,7 @@ func addHTTPEndpoint(cliContext *cli.Context) {
 	})
 
 	if err != nil {
-		log.Fatalf("Could not add endpoint", err)
+		log.Println("Could not add endpoint", err)
 	}
 	log.Println(r.Message)
 }
@@ -39,7 +39,7 @@ func addTCPEndpoint(cliContext *cli.Context) {
 	defer conn.Close()
 	c := checkupservice.NewCheckupClient(conn)
 
-	r, err := c.AddTcpEndpoint(context.Background(), &checkupservice.TcpEndpointRequest{
+	r, err := c.AddTCPEndpoint(context.Background(), &checkupservice.TcpEndpointRequest{
 		Endpoint: &checkupservice.GenericEndpointRequest{
 			Name:     cliContext.String("name"),
 			Url:      cliContext.String("address"),
@@ -49,7 +49,7 @@ func addTCPEndpoint(cliContext *cli.Context) {
 	})
 
 	if err != nil {
-		log.Fatalf("Could not add endpoint", err)
+		log.Println("Could not add endpoint", err)
 	}
 	log.Println(r.Message)
 }

@@ -4,6 +4,7 @@ import (
 	cli "github.com/urfave/cli"
 )
 
+// Commands is a list of commands that will be used in main function of cli app
 var Commands = cli.Commands{
 	{
 		Name:   "add-http",

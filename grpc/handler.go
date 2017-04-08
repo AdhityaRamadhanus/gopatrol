@@ -11,12 +11,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+//ServiceHandler is a grpc server and checkup server
 type ServiceHandler struct {
 	CheckupServer *checkup.Checkup
 	globalLock    sync.RWMutex
 	ConfigPath    string
 }
 
+//NewServiceHandler create new ServiceHandler from a configfile (checkup.json)
 func NewServiceHandler(configFile string) (*ServiceHandler, error) {
 	serviceHandler := &ServiceHandler{
 		CheckupServer: &checkup.Checkup{},
@@ -37,8 +39,7 @@ func NewServiceHandler(configFile string) (*ServiceHandler, error) {
 	return serviceHandler, nil
 }
 
-// Run as a goroutine
-
+//Run the main loop for checkup to check endpoints and should be run as a goroutine
 func (handler *ServiceHandler) Run() {
 	for {
 		timer := time.After(time.Second * 10)
@@ -54,6 +55,7 @@ func (handler *ServiceHandler) Run() {
 	}
 }
 
+// SerializeJSON is a function that save current checkup config to checkup.json in current working dir
 func (handler *ServiceHandler) SerializeJSON() error {
 	jsonBytes, err := handler.CheckupServer.MarshalJSON()
 	if err != nil {

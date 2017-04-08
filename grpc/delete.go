@@ -10,6 +10,7 @@ import (
 	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
 )
 
+//DeleteEndpoint is grpc service to delete some endpoint
 func (handler *ServiceHandler) DeleteEndpoint(ctx context.Context, request *checkupservice.InquiryEndpointRequest) (*checkupservice.EndpointResponse, error) {
 	handler.globalLock.Lock()
 	defer handler.globalLock.Unlock()

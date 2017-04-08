@@ -8,6 +8,7 @@ import (
 	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
 )
 
+//ListEndpoint is grpc service that returns all the endpoints in checkup server
 func (handler *ServiceHandler) ListEndpoint(ctx context.Context, request *checkupservice.ListEndpointRequest) (*checkupservice.ListEndpointResponse, error) {
 	handler.globalLock.RLock()
 	var response = &checkupservice.ListEndpointResponse{

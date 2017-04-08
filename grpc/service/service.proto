@@ -5,8 +5,8 @@ package service;
 // The checkup service definition.
 service checkup {
 	// Endpoint Manipulation Function
-	rpc AddHttpEndpoint (HttpEndpointRequest) returns (EndpointResponse) {}
-	rpc AddTcpEndpoint (TcpEndpointRequest) returns (EndpointResponse) {}
+	rpc AddHTTPEndpoint (HttpEndpointRequest) returns (EndpointResponse) {}
+	rpc AddTCPEndpoint (TcpEndpointRequest) returns (EndpointResponse) {}
 	rpc DeleteEndpoint (InquiryEndpointRequest) returns (EndpointResponse) {}
 
 	// Endpoint Inspection Function

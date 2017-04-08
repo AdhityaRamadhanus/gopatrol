@@ -10,7 +10,8 @@ import (
 	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
 )
 
-func (handler *ServiceHandler) AddTcpEndpoint(ctx context.Context, request *checkupservice.TcpEndpointRequest) (*checkupservice.EndpointResponse, error) {
+//AddTCPEndpoint is grpc service to add tcp endpoint to checkup server
+func (handler *ServiceHandler) AddTCPEndpoint(ctx context.Context, request *checkupservice.TcpEndpointRequest) (*checkupservice.EndpointResponse, error) {
 	handler.globalLock.Lock()
 	defer handler.globalLock.Unlock()
 	tcpChecker := checkup.TCPChecker{
@@ -25,7 +26,8 @@ func (handler *ServiceHandler) AddTcpEndpoint(ctx context.Context, request *chec
 	return &checkupservice.EndpointResponse{Message: message}, nil
 }
 
-func (handler *ServiceHandler) AddHttpEndpoint(ctx context.Context, request *checkupservice.HttpEndpointRequest) (*checkupservice.EndpointResponse, error) {
+//AddHTTPEndpoint is grpc service to add http endpoint to checkup server
+func (handler *ServiceHandler) AddHTTPEndpoint(ctx context.Context, request *checkupservice.HttpEndpointRequest) (*checkupservice.EndpointResponse, error) {
 	handler.globalLock.Lock()
 	defer handler.globalLock.Unlock()
 	httpChecker := checkup.HTTPChecker{
