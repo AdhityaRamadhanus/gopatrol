@@ -94,4 +94,21 @@ var Commands = cli.Commands{
 			},
 		},
 	},
+	{
+		Name:   "setup-page",
+		Usage:  "delete endpoint",
+		Action: setupStatusPage,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "url",
+				Value: "localhost:80",
+				Usage: "url to serve the status page",
+			},
+			cli.StringFlag{
+				Name:  "storage",
+				Value: "fs",
+				Usage: "storage type",
+			},
+		},
+	},
 }
