@@ -14,6 +14,11 @@ default: clean build_checkupd build_checklist
 build_docker: 
 	docker build --tag checkupd:v${VERSION} .
 
+clean_logs:
+	- rm -rf caddy-errors
+	- rm -rf caddy-logs
+	- rm -rf logs
+
 build_checkupd: 
 	@echo "Setup checkupd"
 ifeq ($(OS),Linux)
