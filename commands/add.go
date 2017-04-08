@@ -27,8 +27,9 @@ func addHTTPEndpoint(cliContext *cli.Context) {
 
 	if err != nil {
 		log.Println("Could not add endpoint", err)
+	} else {
+		log.Println(r.Message)
 	}
-	log.Println(r.Message)
 }
 
 func addTCPEndpoint(cliContext *cli.Context) {
@@ -50,6 +51,7 @@ func addTCPEndpoint(cliContext *cli.Context) {
 
 	if err != nil {
 		log.Println("Could not add endpoint", err)
+	} else {
+		log.Println(r.Message)
 	}
-	log.Println(r.Message)
 }

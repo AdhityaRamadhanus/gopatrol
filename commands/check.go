@@ -22,8 +22,9 @@ func checkEndpoint(cliContext *cli.Context) {
 
 	if err != nil {
 		log.Fatalf("could not list endpoints: %v", err)
-	}
-	for _, endpoint := range r.Endpoints {
-		log.Println(endpoint.Name, " ", endpoint.Url, " ", endpoint.Status)
+	} else {
+		for _, endpoint := range r.Endpoints {
+			log.Println(endpoint.Name, " ", endpoint.Url, " ", endpoint.Status)
+		}
 	}
 }

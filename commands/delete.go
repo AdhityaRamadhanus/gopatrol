@@ -22,6 +22,7 @@ func deleteEndpoint(cliContext *cli.Context) {
 
 	if err != nil {
 		log.Println("failed to delete endpoint", err)
+	} else {
+		log.Println(r.Message)
 	}
-	log.Println(r.Message)
 }
