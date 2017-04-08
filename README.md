@@ -78,6 +78,12 @@ Usage
 4. docker-compose up -d
 ```
 
+![checkupd](https://cloud.githubusercontent.com/assets/5761975/24827353/e485bb2c-1c71-11e7-9c7f-f57e1e8d7890.gif)
+
+* Status Page
+![redis](https://cloud.githubusercontent.com/assets/5761975/24827378/70282b2e-1c72-11e7-968b-408158825184.png)
+
+
 License
 ----
 
