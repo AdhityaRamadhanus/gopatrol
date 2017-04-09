@@ -5,6 +5,7 @@ import (
 	"os"
 
 	commands "github.com/AdhityaRamadhanus/checkupd/commands"
+	"github.com/AdhityaRamadhanus/checkupd/config"
 	"github.com/urfave/cli"
 )
 
@@ -20,6 +21,8 @@ func cmdNotFound(c *cli.Context, command string) {
 }
 
 func main() {
+	// Init Config
+	config.SetDefaultConfig()
 	app := cli.NewApp()
 	app.Name = "checklist"
 	app.Author = "Adhitya Ramadhanus"

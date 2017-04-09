@@ -96,19 +96,52 @@ var Commands = cli.Commands{
 		},
 	},
 	{
-		Name:   "setup-page",
-		Usage:  "delete endpoint",
-		Action: setupStatusPage,
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "url",
-				Value: "localhost:80",
-				Usage: "url to serve the status page",
+		Name:  "setup-page",
+		Usage: "Setup statuspage",
+		Subcommands: []cli.Command{
+			{
+				Name:   "fs",
+				Usage:  "setup status page using filesystem as storage",
+				Action: setupFSStatusPage,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "url",
+						Value: "localhost:80",
+						Usage: "url to serve the status page",
+					},
+				},
 			},
-			cli.StringFlag{
-				Name:  "storage",
-				Value: "fs",
-				Usage: "storage type",
+			{
+				Name:   "s3",
+				Usage:  "setup status page using filesystem as storage",
+				Action: setupS3StatusPage,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "url",
+						Value: "localhost:80",
+						Usage: "url to serve the status page",
+					},
+					cli.StringFlag{
+						Name:  "accesskeyid, i",
+						Value: "",
+						Usage: "S3 Access Key ID",
+					},
+					cli.StringFlag{
+						Name:  "secretaccesskey, k",
+						Value: "",
+						Usage: "S3 Secret",
+					},
+					cli.StringFlag{
+						Name:  "region, r",
+						Value: "",
+						Usage: "S3 Region",
+					},
+					cli.StringFlag{
+						Name:  "bucket, b",
+						Value: "",
+						Usage: "S3 Bucket",
+					},
+				},
 			},
 		},
 	},
