@@ -74,7 +74,7 @@ Usage
 ```
 1. make build_docker
 2. make 
-3. ./build/{linux,mac}/checklist setup-page
+3. ./build/{linux,mac}/checklist setup-page fs/s3
 4. docker-compose up -d
 ```
 
@@ -83,6 +83,10 @@ Usage
 * Status Page
 ![redis](https://cloud.githubusercontent.com/assets/5761975/24827378/70282b2e-1c72-11e7-968b-408158825184.png)
 
+Todo
+-----------
+* Slack Notifier
+* Email Notifier
 
 License
 ----
