@@ -26,3 +26,6 @@ _testmain.go
 build/
 logs/
 *.gif
+
+checkup.json
+Caddyfile

@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/AdhityaRamadhanus/checkup"
+	checkup "github.com/AdhityaRamadhanus/checkupd"
 	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
 )
 
