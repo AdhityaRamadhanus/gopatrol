@@ -122,37 +122,13 @@ func (s *SlackNotifier) Notify(results []Result) error {
 		// If the endpoint is Down
 		switch {
 		case result.Down:
-
-			if state.LastStatus == "healthy" || state.LastChange == 0 {
-				boolSend = true
-				attachment := slack.Attachment{
-					Title: result.Title + " is currently down",
-					Text:  result.Endpoint,
-					Color: "danger",
-					Fields: []slack.AttachmentField{
-						slack.AttachmentField{
-							Title: "Last Checked",
-							Value: time.Unix(0, result.Timestamp).Format("2006-01-02-15:04:05"),
-							Short: true,
-						},
-						slack.AttachmentField{
-							Title: "Last Up",
-							Value: time.Unix(0, state.LastChange).Format("2006-01-02-15:04:05"),
-							Short: true,
-						},
-					},
-				}
-				params.Attachments = append(params.Attachments, attachment)
-				state.LastChange = result.Timestamp
-				state.LastStatus = result.Status()
-			}
 			lastResultTime := time.Unix(0, result.Timestamp)
 			lastChangeTime := time.Unix(0, state.LastChange)
 			diffMinutes := lastResultTime.Sub(lastChangeTime).Minutes()
-			if state.LastStatus == "down" && diffMinutes > 5.0 {
+			if state.LastStatus == "healthy" || (state.LastStatus == "down" && diffMinutes > 5.0) {
 				boolSend = true
 				attachment := slack.Attachment{
-					Title: result.Title + " still down",
+					Title: result.Title + " is currently down",
 					Text:  result.Endpoint,
 					Color: "danger",
 					Fields: []slack.AttachmentField{
