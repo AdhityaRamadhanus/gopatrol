@@ -12,7 +12,7 @@ self-hosted endpoint monitoring and status pages based on https://github.com/sou
   <a href="#licenses">License</a>
   <br><br>
   <blockquote>
-	Checkupd is self-hosted health checks and status pages, written in Go using checkup and grpc as backend.
+	Checkupd is self-hosted health checks and status pages, written in Go using checkup (instead of using them as dependency i decide to copy the file to this project) and grpc as backend.
 
     It includes cli app called checklist to manage endpoint, setting up environment for status page and daemon to check endpoints called checkupd.
 
