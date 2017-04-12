@@ -44,7 +44,5 @@ clean:
 	rm -rf build/*
 
 reset_setup:
-	- rm -rf caddy-errors
-	- rm -rf caddy-logs
-	- rm -rf logs
-	- rm checkup.json Caddyfile
+	- rm -rf checkup_config
+	- rm -rf caddy_config

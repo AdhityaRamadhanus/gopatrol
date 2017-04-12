@@ -5,10 +5,9 @@ import (
 	"log"
 	"os"
 
-	"io/ioutil"
-
 	"github.com/AdhityaRamadhanus/checkup"
 	"github.com/AdhityaRamadhanus/checkupd/config"
+	"github.com/AdhityaRamadhanus/checkupd/templates"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
@@ -63,9 +62,9 @@ func setupFS(url string) error {
 	// Create directory for logs
 	// ignore the error
 	log.Println("Setting up directory")
-	os.Mkdir("./logs", 0777)
-	os.Mkdir("./caddy-logs", 0777)
-	os.Mkdir("./caddy-errors", 0777)
+	os.MkdirAll("./checkup_config/logs", 0777)
+	os.MkdirAll("./caddy_config/caddy-logs", 0777)
+	os.MkdirAll("./caddy_config/caddy-errors", 0777)
 	// setup checkup.json
 	log.Println("Creating checkup.json")
 	checkup := checkup.Checkup{
@@ -89,7 +88,7 @@ func setupFS(url string) error {
 	// setup Caddyfile
 	// Read the template
 	log.Println("Creating Caddyfile")
-	caddyTemplate, err := template.ParseFiles(config.DefaultTplCaddyfile)
+	caddyTemplate, err := template.New("caddyfile").Parse(templates.CaddyFile)
 	if err != nil {
 		return errors.Wrap(err, "Error parsing caddy template config")
 	}
@@ -105,28 +104,24 @@ func setupFS(url string) error {
 
 	// setup config status page
 	log.Println("Creating config.js for status page")
-	srcConfigBytes, err := ioutil.ReadFile(config.DefaultTplFSJS)
-	if err != nil {
-		return errors.Wrap(err, "Failed opening config.js")
-	}
 
 	dstConfigFile, err := os.OpenFile(config.DefaultConfigJS, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer dstConfigFile.Close()
-	if _, err = dstConfigFile.Write(srcConfigBytes); err != nil {
+	if _, err = dstConfigFile.WriteString(templates.ConfigFSJS); err != nil {
 		return errors.Wrap(err, "Failed to write config.js")
 	}
 
 	// setup config status page
 	log.Println("Creating index.html for status page")
 
-	srcIndexHTML, err := ioutil.ReadFile(config.DefaultTplIndexFS)
+	indexTemplate, err := template.New("index.html").Parse(templates.IndexHTML)
 	if err != nil {
-		return errors.Wrap(err, "Failed opening index_fs.html")
+		return errors.Wrap(err, "Error parsing index html template")
 	}
 
 	dstIndexHTML, err := os.OpenFile(config.DefaultIndexHtml, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer dstConfigFile.Close()
-	if _, err = dstIndexHTML.Write(srcIndexHTML); err != nil {
+	if err = indexTemplate.Execute(dstIndexHTML, struct{ Type string }{Type: "fs"}); err != nil {
 		return errors.Wrap(err, "Failed to write index.html")
 	}
 	log.Println("Success!")
@@ -138,9 +133,9 @@ func setupS3(url string, s3 config.S3Config) error {
 	// Create directory for logs
 	// ignore the error
 	log.Println("Setting up directory")
-	os.Mkdir("./logs", 0777)
-	os.Mkdir("./caddy-logs", 0777)
-	os.Mkdir("./caddy-errors", 0777)
+	os.MkdirAll("./checkup_config/logs", 0777)
+	os.MkdirAll("./caddy_config/caddy-logs", 0777)
+	os.MkdirAll("./caddy_config/caddy-errors", 0777)
 	// setup checkup.json
 	log.Println("Creating checkup.json")
 	checkup := checkup.Checkup{
@@ -167,7 +162,7 @@ func setupS3(url string, s3 config.S3Config) error {
 	// setup Caddyfile
 	// Read the template
 	log.Println("Creating Caddyfile")
-	caddyTemplate, err := template.ParseFiles(config.DefaultTplCaddyfile)
+	caddyTemplate, err := template.New("caddyfile").Parse(templates.CaddyFile)
 	if err != nil {
 		return errors.Wrap(err, "Error parsing caddy template config")
 	}
@@ -183,7 +178,7 @@ func setupS3(url string, s3 config.S3Config) error {
 
 	// setup config status page
 	log.Println("Creating config.js for status page")
-	s3ConfigTemplate, err := template.ParseFiles(config.DefaultTplS3JS)
+	s3ConfigTemplate, err := template.New("configjs").Parse(templates.ConfigS3JS)
 	if err != nil {
 		return errors.Wrap(err, "Error parsing s3 template config")
 	}
@@ -197,14 +192,14 @@ func setupS3(url string, s3 config.S3Config) error {
 	// setup config status page
 	log.Println("Creating index.html for status page")
 
-	srcIndexHTML, err := ioutil.ReadFile(config.DefaultTplIndexS3)
+	indexTemplate, err := template.New("index.html").Parse(templates.IndexHTML)
 	if err != nil {
-		return errors.Wrap(err, "Failed opening index_fs.html")
+		return errors.Wrap(err, "Error parsing index html template")
 	}
 
 	dstIndexHTML, err := os.OpenFile(config.DefaultIndexHtml, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer dstConfigFile.Close()
-	if _, err = dstIndexHTML.Write(srcIndexHTML); err != nil {
+	if err = indexTemplate.Execute(dstIndexHTML, struct{ Type string }{Type: "s3"}); err != nil {
 		return errors.Wrap(err, "Failed to write index.html")
 	}
 	log.Println("Success!")

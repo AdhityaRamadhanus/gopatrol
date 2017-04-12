@@ -1,4 +1,6 @@
-{{.URL}} {  
+package templates
+
+var CaddyFile = `{{.URL}} {  
     root /statuspage
     log /root/.caddy/logs/checkup.log {
         rotate {
@@ -8,4 +10,4 @@
         }
     }
     errors /root/.caddy/errors/checkup.log
-}
+}`

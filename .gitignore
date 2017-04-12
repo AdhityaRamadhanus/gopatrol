@@ -29,3 +29,6 @@ logs/
 
 checkup.json
 Caddyfile
+
+caddy_config/
+checkup_config

@@ -8,8 +8,8 @@ services:
       - "9009:9009"
     network_mode: "host"
     volumes:
-      - "./checkup.json:/checkup/checkup.json"
-      - "./logs:/checkup/logs"
+      - "./checkup_config/checkup.json:/checkup/checkup.json"
+      - "./checkup_config/logs:/checkup/logs"
   statuspage:
     image: abiosoft/caddy
     container_name: caddy
@@ -18,8 +18,8 @@ services:
     - "80:80"
     - "443:443"
     volumes:
-    - "./logs:/statuspage/logs"
+    - "./checkup_config/logs:/statuspage/logs"
     - "./statuspage:/statuspage"
-    - "./Caddyfile:/etc/Caddyfile"
-    - "./caddy-logs:/root/.caddy/logs"
-    - "./caddy-errors:/root/.caddy/errors"
+    - "./caddy_config/Caddyfile:/etc/Caddyfile"
+    - "./caddy_config/caddy-logs:/root/.caddy/logs"
+    - "./caddy_config/caddy-errors:/root/.caddy/errors"
