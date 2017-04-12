@@ -2,21 +2,22 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/AdhityaRamadhanus/checkupd)](https://goreportcard.com/report/github.com/AdhityaRamadhanus/checkupd)  
 
-self-hosted endpoint monitoring and status pages based on https://github.com/sourcegraph/checkup
+self-hosted endpoint monitoring daemon and status pages based on https://github.com/sourcegraph/checkup
 
 <p>
   <a href="#installation">Installation |</a>
   <a href="#checklist">Checklist</a> |
   <a href="#checkupd">Checkupd</a> |
   <a href="#usage">Usage</a> |
+  <a href="notifier">Notifier</a>
   <a href="#licenses">License</a>
   <br><br>
   <blockquote>
 	Checkupd is self-hosted health checks and status pages, written in Go using checkup (instead of using them as dependency i decide to copy the file to this project) and grpc as backend.
 
-    It includes cli app called checklist to manage endpoint, setting up environment for status page and daemon to check endpoints called checkupd.
+  It includes cli app called checklist to manage endpoint, setting up environment for status page and daemon to check endpoints called checkupd. There is also slack notifier to notify users when some endpoint status is changed.
 
-    There is much work to do for this project to be complete. Use it carefully.
+  There is much work to do for this project to be complete. Use it carefully.
   </blockquote>
 </p>
 
@@ -24,8 +25,8 @@ Installation
 ------------
 * git clone
 * go get -v
-* make (will create to executable on build/linux or build/mac)
 * make build_docker (optional, create docker image checkup:v1.0.0)
+* make (will create to executable on build/linux or build/mac)
 
 Checklist
 ------------
@@ -83,9 +84,33 @@ Usage
 * Status Page
 ![redis](https://cloud.githubusercontent.com/assets/5761975/24827378/70282b2e-1c72-11e7-968b-408158825184.png)
 
+Notifier
+-----------
+* To use this notifier you need bot integration in your team and channel id where this bot will notify you, refer to this link https://api.slack.com/bot-users
+* Example of checkup.json 
+```
+{
+	"checkers": [{
+		"type": "tcp",
+		"endpoint_name": "redis",
+		"endpoint_url": "localhost:6379",
+		"attempts": 5
+	}],
+	"storage": {
+		"provider": "fs",
+		"dir": "./logs"
+	},
+    "notifier": {
+        "name": "slack",
+        "token": "your token",
+        "channel": "your channel id"
+    }
+}
+```
+
+
 Todo
 -----------
-* Slack Notifier
 * Email Notifier
 
 License
