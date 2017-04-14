@@ -1,7 +1,7 @@
 checkup.config = {
 	// How much history to show on the status page. Long durations and
 	// frequent checks make for slow loading, so be conservative.
-	"timeframe": 1 * time.Day,
+	"timeframe": 30 * time.Minute,
 
 	// How often, in seconds, to pull new checks and update the page.
 	"refresh_interval": 60,

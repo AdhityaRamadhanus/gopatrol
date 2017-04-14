@@ -23,7 +23,7 @@ var (
 func SetDefaultConfig() {
 	var workingDir = "."
 	workingDir, _ = os.Getwd()
-	DefaultConfigJS = path.Join(workingDir, "statuspage/config.js")
+	DefaultConfigJS = path.Join(workingDir, "statuspage/js/config.js")
 	DefaultCheckupJSON = path.Join(workingDir, "checkup_config/checkup.json")
 	DefaultCaddyFile = path.Join(workingDir, "caddy_config/Caddyfile")
 	DefaultIndexHtml = path.Join(workingDir, "statuspage/index.html")

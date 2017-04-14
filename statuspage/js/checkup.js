@@ -75,24 +75,31 @@ checkup.timeSince = function(ms) {
 	return Math.floor(seconds) + " seconds";
 };
 
+checkup.dateTimeString = function (ms) {
+	var d = new Date(ms);
+	return d.getFullYear()+"-"
+		+ checkup.leftpad(d.getMonth()+1, 2, "0")+"-"
+		+ checkup.leftpad(d.getDate(), 2, "0")+"T"
+		+ checkup.leftpad(d.getHours(), 2, "0")+":"
+		+ checkup.leftpad(d.getMinutes(), 2, "0")+":"
+		+ checkup.leftpad(d.getSeconds(), 2, "0");
+}
+
+checkup.compactDateTimeString = function (ms) {
+	var d = new Date(ms);
+	return checkup.leftpad(d.getHours(), 2, "0")+":"
+		+ checkup.leftpad(d.getMinutes(), 2, "0")+":"
+		+ checkup.leftpad(d.getSeconds(), 2, "0");
+}
+
 // makeTimeTag returns a <time> tag (as a string) that
 // has the time since the timestamp, ms (in milliseconds).
 checkup.makeTimeTag = function(ms) {
 	// dateTimeString converts ms (in milliseconds) into
 	// a value usable in a <time> tag's datetime attribute.
-	function dateTimeString(ms) {
-		var d = new Date(ms);
-		return d.getFullYear()+"-"
-			+ checkup.leftpad(d.getMonth()+1, 2, "0")+"-"
-			+ checkup.leftpad(d.getDate(), 2, "0")+"T"
-			+ checkup.leftpad(d.getHours(), 2, "0")+":"
-			+ checkup.leftpad(d.getMinutes(), 2, "0")+":"
-			+ checkup.leftpad(d.getSeconds(), 2, "0")+"-"
-			+ checkup.leftpad((d.getTimezoneOffset()/60), 2, "0")+":00";
-	}
 
-	return '<time class="dynamic" datetime="'+dateTimeString(ms)+'">'
-			+ checkup.timeSince(ms)
+	return '<time class="dynamic" datetime="'+checkup.dateTimeString(ms)+'">'
+			+ checkup.dateTimeString(ms)
 			+ '</time>';
 }
 

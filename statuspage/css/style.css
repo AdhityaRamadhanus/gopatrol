@@ -4,8 +4,16 @@
 }
 
 body {
-	font-family: 'Source Sans Pro', sans-serif;
-	font-size: 16px;
+
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #FFF;
+	background: #252B30;
+}
+
+.app {
+	padding: 15px;
 }
 
 header {
@@ -29,31 +37,34 @@ main {
 	width: 75%;
 }
 
-.chart-50  { width: 50%; }
-.chart-100 { width: 100%; }
+.chart-50  { width: 49.5%; }
+.chart-100 { width: 99%; }
 
-#overall-status-text {
+.overall-status-text {
 	padding: 50px 10px 10px 10px;
 	color: #FFF;
 }
 
-#overall-status.green  { background-color: #40D24C; }
-#overall-status.yellow { background-color: #D2C640; }
-#overall-status.red    { background-color: #D24040; }
-#overall-status.gray   { background-color: #B8B8B8; }
+.overall-status.green  { background-color: #40D24C; }
+.overall-status.yellow { background-color: #D2C640; }
+.overall-status.red    { background-color: #D24040; }
+.overall-status.gray   { background-color: #B8B8B8; }
 
-#overall-status-text {
+.overall-status-text {
 	font: bold 42px 'Source Sans Pro', sans-serif;
 	text-transform: uppercase;
 	text-align: center;
 	line-height: 1em;
 }
 
+.pull-right {
+	float: right !important;
+}
+
 .infobar {
 	font-size: 12px;
 	font-family: sans-serif;
 	padding: 10px;
-	background: rgba(255, 255, 255, .8);
 }
 
 .infobar .item {
@@ -62,7 +73,7 @@ main {
 }
 
 #timeline {
-	width: 25%;
+	width: 23%;
 	position: relative;
 	z-index: 1;
 }
@@ -144,7 +155,7 @@ main {
 
 
 .chart {
-	padding-bottom: 20px;
+	padding: 10px;
 }
 
 .chart-title {
@@ -166,6 +177,12 @@ svg {
   max-width: 100%; /* thanks for nothin, Safari */
 }
 
+.chart-container {
+	border-top: 1px solid rgba(255, 255, 255, 0.15);
+	background: #1F2328;
+	margin-right: 3px;
+}
+
 .chart-container .chart svg {
 	font-size: 16px;
 }
@@ -182,11 +199,7 @@ svg {
 .line {
   fill: none;
   stroke: #CCC;
-  stroke-width: 2px;
-}
-
-.chart-container .chart .line {
-	stroke-width: 4px;
+  stroke-width: 1px;
 }
 
 .min.line,
@@ -209,11 +222,6 @@ svg {
 	stroke: #B1DC9C;
 }
 
-.line.main {
-	stroke: #333;
-	stroke-linecap: round;
-}
-
 .line.max {
 	stroke: #FFA447;
 }
@@ -228,7 +236,7 @@ svg {
 }
 
 .focus circle {
-	fill: #333;
+	fill: #FFF;
 	stroke: #333;
 }
 
@@ -280,7 +288,7 @@ footer {
 	#timeline   { width: 40%; }
 	.chart-50   { width: 100%; }
 
-	#overall-status-text {
+	.overall-status-text {
 		font-size: 34px;
 		padding: 15px;
 	}
