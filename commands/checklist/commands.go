@@ -1,6 +1,8 @@
-package commands
+package checklist
 
 import (
+	"os"
+
 	cli "github.com/urfave/cli"
 )
 
@@ -11,6 +13,10 @@ var Commands = cli.Commands{
 		Usage:  "Add endpoints to checkup",
 		Action: addHTTPEndpoint,
 		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "tls",
+				Usage: "Name of endpoint",
+			},
 			cli.StringFlag{
 				Name:  "name",
 				Value: "",
@@ -33,6 +39,10 @@ var Commands = cli.Commands{
 		Usage:  "Add tcp endpoints to checkup",
 		Action: addTCPEndpoint,
 		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "tls",
+				Usage: "Name of endpoint",
+			},
 			cli.StringFlag{
 				Name:  "name",
 				Value: "",
@@ -59,6 +69,15 @@ var Commands = cli.Commands{
 		Usage:  "list and check endpoints",
 		Action: checkEndpoint,
 		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "tls",
+				Usage: "Name of endpoint",
+			},
+			cli.StringFlag{
+				Name:  "pass, p",
+				Value: os.Getenv("CHECKUPD_CLIENT_PASS"),
+				Usage: "Password for grpc call",
+			},
 			cli.StringFlag{
 				Name:  "host",
 				Value: ":9009",
@@ -71,6 +90,10 @@ var Commands = cli.Commands{
 		Usage:  "list endpoint",
 		Action: listEndpoint,
 		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "tls",
+				Usage: "Name of endpoint",
+			},
 			cli.StringFlag{
 				Name:  "host",
 				Value: ":9009",
@@ -83,6 +106,15 @@ var Commands = cli.Commands{
 		Usage:  "delete endpoint",
 		Action: deleteEndpoint,
 		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "tls",
+				Usage: "Name of endpoint",
+			},
+			cli.StringFlag{
+				Name:  "pass, p",
+				Value: os.Getenv("CHECKUPD_CLIENT_PASS"),
+				Usage: "Password for grpc call",
+			},
 			cli.StringFlag{
 				Name:  "host",
 				Value: ":9009",
@@ -92,56 +124,6 @@ var Commands = cli.Commands{
 				Name:  "name",
 				Value: "",
 				Usage: "endpoint name",
-			},
-		},
-	},
-	{
-		Name:  "setup-page",
-		Usage: "Setup statuspage",
-		Subcommands: []cli.Command{
-			{
-				Name:   "fs",
-				Usage:  "setup status page using filesystem as storage",
-				Action: setupFSStatusPage,
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "url",
-						Value: "localhost:80",
-						Usage: "url to serve the status page",
-					},
-				},
-			},
-			{
-				Name:   "s3",
-				Usage:  "setup status page using filesystem as storage",
-				Action: setupS3StatusPage,
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "url",
-						Value: "localhost:80",
-						Usage: "url to serve the status page",
-					},
-					cli.StringFlag{
-						Name:  "accesskeyid, i",
-						Value: "",
-						Usage: "S3 Access Key ID",
-					},
-					cli.StringFlag{
-						Name:  "secretaccesskey, k",
-						Value: "",
-						Usage: "S3 Secret",
-					},
-					cli.StringFlag{
-						Name:  "region, r",
-						Value: "",
-						Usage: "S3 Region",
-					},
-					cli.StringFlag{
-						Name:  "bucket, b",
-						Value: "",
-						Usage: "S3 Bucket",
-					},
-				},
 			},
 		},
 	},

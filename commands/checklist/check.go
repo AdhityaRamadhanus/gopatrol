@@ -1,4 +1,4 @@
-package commands
+package checklist
 
 import (
 	"context"
@@ -6,12 +6,10 @@ import (
 
 	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
 	"github.com/urfave/cli"
-	"google.golang.org/grpc"
 )
 
 func checkEndpoint(cliContext *cli.Context) {
-	// Set up a connection to the server.
-	conn, err := grpc.Dial(cliContext.String("host"), grpc.WithInsecure())
+	conn, err := createGrpcClient(cliContext)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
