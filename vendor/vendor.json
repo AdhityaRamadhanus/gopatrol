@@ -190,6 +190,12 @@
 			"revisionTime": "2017-02-17T23:44:32Z"
 		},
 		{
+			"checksumSHA1": "TA1KdxVeWxAOE4yu3YXUma96xlw=",
+			"path": "github.com/grpc-ecosystem/go-grpc-middleware/util/metautils",
+			"revision": "164c5fae744b141cd3e4a182b40d66fd4655c822",
+			"revisionTime": "2017-04-13T16:40:01Z"
+		},
+		{
 			"checksumSHA1": "0ZrwvB6KoGPj2PoDNSEJwxQ6Mog=",
 			"origin": "github.com/aws/aws-sdk-go/vendor/github.com/jmespath/go-jmespath",
 			"path": "github.com/jmespath/go-jmespath",
@@ -308,10 +314,10 @@
 			"revisionTime": "2017-02-16T00:36:43Z"
 		},
 		{
-			"checksumSHA1": "T05Mzg3hEv2Vxao9hZn0Kv+nwUQ=",
+			"checksumSHA1": "4vbTFdNR1O8fvE6I77sESA8gEHw=",
 			"path": "google.golang.org/grpc/metadata",
-			"revision": "d0c32ee6a441117d49856d6120ca9552af413ee0",
-			"revisionTime": "2017-02-16T00:36:43Z"
+			"revision": "8a6eb0f6e96a246c7c655b0207b62255042f6fbd",
+			"revisionTime": "2017-04-13T20:41:35Z"
 		},
 		{
 			"checksumSHA1": "4GSUFhOQ0kdFlBH4D5OTeKy78z0=",
