@@ -10,9 +10,10 @@ import (
 )
 
 func addHTTPEndpoint(cliContext *cli.Context) {
-	conn, err := grpc.Dial(cliContext.String("host"), grpc.WithInsecure())
+	conn, err := createGrpcClient(cliContext)
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Println("could not connect to grpc server", err)
+		return
 	}
 	defer conn.Close()
 	c := checkupservice.NewCheckupClient(conn)

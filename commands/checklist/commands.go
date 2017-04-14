@@ -1,8 +1,6 @@
 package checklist
 
 import (
-	"os"
-
 	cli "github.com/urfave/cli"
 )
 
@@ -74,11 +72,6 @@ var Commands = cli.Commands{
 				Usage: "Name of endpoint",
 			},
 			cli.StringFlag{
-				Name:  "pass, p",
-				Value: os.Getenv("CHECKUPD_CLIENT_PASS"),
-				Usage: "Password for grpc call",
-			},
-			cli.StringFlag{
 				Name:  "host",
 				Value: ":9009",
 				Usage: "grpc server address",
@@ -109,11 +102,6 @@ var Commands = cli.Commands{
 			cli.BoolFlag{
 				Name:  "tls",
 				Usage: "Name of endpoint",
-			},
-			cli.StringFlag{
-				Name:  "pass, p",
-				Value: os.Getenv("CHECKUPD_CLIENT_PASS"),
-				Usage: "Password for grpc call",
 			},
 			cli.StringFlag{
 				Name:  "host",
