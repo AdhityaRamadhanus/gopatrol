@@ -27,7 +27,7 @@ var Commands = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "host",
-				Value: ":9009",
+				Value: "/tmp/checkupd.sock",
 				Usage: "grpc server address",
 			},
 		},
@@ -37,10 +37,6 @@ var Commands = cli.Commands{
 		Usage:  "Add tcp endpoints to checkup",
 		Action: addTCPEndpoint,
 		Flags: []cli.Flag{
-			cli.BoolFlag{
-				Name:  "tls",
-				Usage: "Name of endpoint",
-			},
 			cli.StringFlag{
 				Name:  "name",
 				Value: "",
@@ -55,9 +51,13 @@ var Commands = cli.Commands{
 				Name:  "tls",
 				Usage: "Is it tls endpoint?",
 			},
+			cli.BoolFlag{
+				Name:  "tcp-tls",
+				Usage: "Is it tls endpoint?",
+			},
 			cli.StringFlag{
 				Name:  "host",
-				Value: ":9009",
+				Value: "/tmp/checkupd.sock",
 				Usage: "grpc server address",
 			},
 		},
@@ -73,7 +73,7 @@ var Commands = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "host",
-				Value: ":9009",
+				Value: "/tmp/checkupd.sock",
 				Usage: "grpc server address",
 			},
 		},
@@ -89,7 +89,7 @@ var Commands = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "host",
-				Value: ":9009",
+				Value: "/tmp/checkupd.sock",
 				Usage: "grpc server address",
 			},
 		},
@@ -105,7 +105,7 @@ var Commands = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "host",
-				Value: ":9009",
+				Value: "/tmp/checkupd.sock",
 				Usage: "grpc server address",
 			},
 			cli.StringFlag{

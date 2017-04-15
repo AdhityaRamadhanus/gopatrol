@@ -6,7 +6,6 @@ import (
 
 	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
 	"github.com/urfave/cli"
-	"google.golang.org/grpc"
 )
 
 func addHTTPEndpoint(cliContext *cli.Context) {
@@ -34,9 +33,10 @@ func addHTTPEndpoint(cliContext *cli.Context) {
 }
 
 func addTCPEndpoint(cliContext *cli.Context) {
-	conn, err := grpc.Dial(cliContext.String("host"), grpc.WithInsecure())
+	conn, err := createGrpcClient(cliContext)
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Println("could not connect to grpc server", err)
+		return
 	}
 	defer conn.Close()
 	c := checkupservice.NewCheckupClient(conn)
@@ -47,7 +47,7 @@ func addTCPEndpoint(cliContext *cli.Context) {
 			Url:      cliContext.String("address"),
 			Attempts: 5,
 		},
-		Tls: cliContext.Bool("tls"),
+		Tls: cliContext.Bool("tcp-tls"),
 	})
 
 	if err != nil {

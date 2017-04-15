@@ -74,7 +74,7 @@ func runDaemon(cliContext *cli.Context) {
 	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	// Prepare Server
-	listener, err := net.Listen("tcp", cliContext.String("port"))
+	listener, err := net.Listen(cliContext.String("proto"), cliContext.String("address"))
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -96,7 +96,7 @@ func runDaemon(cliContext *cli.Context) {
 	go serviceHandler.Run()
 	// Checkup Goroutine
 
-	log.Println("Tcp server is running at ", cliContext.String("port"))
+	log.Println("Tcp server is running at ", listener.Addr().String())
 	if err := tcpServer.Serve(listener); err != nil {
 		log.Println(err)
 		os.Exit(1)

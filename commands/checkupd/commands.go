@@ -67,8 +67,13 @@ var Commands = cli.Commands{
 				Usage: "url to bind the daemon",
 			},
 			cli.StringFlag{
-				Name:  "port",
-				Value: ":9009",
+				Name:  "proto",
+				Value: "unix",
+				Usage: "url to bind the daemon",
+			},
+			cli.StringFlag{
+				Name:  "address",
+				Value: "/tmp/checkupd.sock",
 				Usage: "url to bind the daemon",
 			},
 		},
