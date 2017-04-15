@@ -33,6 +33,55 @@ Installation
 ----------- 
 * git clone
 * make
+```bash
+NAME:
+   checklist - Checkup server cli 
+
+USAGE:
+   checklist [global options] command [command options] [arguments...]
+
+VERSION:
+   1.0.0
+
+AUTHOR:
+   Adhitya Ramadhanus <adhitya.ramadhanus@gmail.com>
+
+COMMANDS:
+     add-http  Add endpoints to checkup
+     add-tcp   Add tcp endpoints to checkup
+     check     list and check endpoints
+     list      list endpoint
+     delete    delete endpoint
+     help, h   Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --help, -h     show help
+   --version, -v  print the version
+```
+
+```bash
+NAME:
+   checkupd - Checkupd daemon 
+
+USAGE:
+   checkupd [global options] command [command options] [arguments...]
+
+VERSION:
+   1.0.0
+
+AUTHOR:
+   Adhitya Ramadhanus <adhitya.ramadhanus@gmail.com>
+
+COMMANDS:
+     setup-page    Setup statuspage
+     setup-daemon  Setup daemon
+     daemon        run daemon
+     help, h       Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --help, -h     show help
+   --version, -v  print the version
+```
 
 ### Setting up checkupd with FS
 All you need to do is setup configuration for daemon and status page
