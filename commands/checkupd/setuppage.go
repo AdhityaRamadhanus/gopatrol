@@ -1,11 +1,10 @@
-package commands
+package checkupd
 
 import (
 	"html/template"
 	"log"
 	"os"
 
-	"github.com/AdhityaRamadhanus/checkup"
 	"github.com/AdhityaRamadhanus/checkupd/config"
 	"github.com/AdhityaRamadhanus/checkupd/templates"
 	"github.com/pkg/errors"
@@ -62,29 +61,8 @@ func setupFS(url string) error {
 	// Create directory for logs
 	// ignore the error
 	log.Println("Setting up directory")
-	os.MkdirAll("./checkup_config/logs", 0777)
 	os.MkdirAll("./caddy_config/caddy-logs", 0777)
 	os.MkdirAll("./caddy_config/caddy-errors", 0777)
-	// setup checkup.json
-	log.Println("Creating checkup.json")
-	checkup := checkup.Checkup{
-		Checkers: []checkup.Checker{},
-		Storage: checkup.FS{
-			Dir: "/checkup/logs",
-		},
-	}
-	jsonBytes, err := checkup.MarshalJSON()
-	if err != nil {
-		return err
-	}
-	file, err := os.OpenFile(config.DefaultCheckupJSON, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
-	defer file.Close()
-	if err != nil {
-		return errors.Wrap(err, "Failed opening checkup.json file")
-	}
-	if _, err = file.Write(jsonBytes); err != nil {
-		return errors.Wrap(err, "Failed to write checkup.json")
-	}
 	// setup Caddyfile
 	// Read the template
 	log.Println("Creating Caddyfile")
@@ -133,32 +111,8 @@ func setupS3(url string, s3 config.S3Config) error {
 	// Create directory for logs
 	// ignore the error
 	log.Println("Setting up directory")
-	os.MkdirAll("./checkup_config/logs", 0777)
 	os.MkdirAll("./caddy_config/caddy-logs", 0777)
 	os.MkdirAll("./caddy_config/caddy-errors", 0777)
-	// setup checkup.json
-	log.Println("Creating checkup.json")
-	checkup := checkup.Checkup{
-		Checkers: []checkup.Checker{},
-		Storage: checkup.S3{
-			AccessKeyID:     s3.AccessKeyID,
-			SecretAccessKey: s3.SecretAccessKey,
-			Region:          s3.Region,
-			Bucket:          s3.Bucket,
-		},
-	}
-	jsonBytes, err := checkup.MarshalJSON()
-	if err != nil {
-		return err
-	}
-	file, err := os.OpenFile(config.DefaultCheckupJSON, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
-	defer file.Close()
-	if err != nil {
-		return errors.Wrap(err, "Failed opening checkup.json file")
-	}
-	if _, err = file.Write(jsonBytes); err != nil {
-		return errors.Wrap(err, "Failed to write checkup.json")
-	}
 	// setup Caddyfile
 	// Read the template
 	log.Println("Creating Caddyfile")

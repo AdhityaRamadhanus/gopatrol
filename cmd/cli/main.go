@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	commands "github.com/AdhityaRamadhanus/checkupd/commands"
+	commands "github.com/AdhityaRamadhanus/checkupd/commands/checklist"
 	"github.com/AdhityaRamadhanus/checkupd/config"
 	"github.com/urfave/cli"
 )

@@ -390,10 +390,23 @@ function renderChart (chart) {
 
 	// Div to contain the endpoint / title
 	let chartTitleElm = document.createElement('div');
-	chartTitleElm.className = "form-group clearfix panel-header";
+	chartTitleElm.className = "chart-title-container";
+
+// var a = document.createElement('a');
+// var linkText = document.createTextNode("my title text");
+// a.appendChild(linkText);
+// a.title = "my title text";
+// a.href = "http://example.com";
+// document.body.appendChild(a);
+
+	let chartTitleLink = document.createElement('a');
+	chartTitleLink.appendChild(document.createTextNode(chart.title))
+	chartTitleLink.href = chart.endpoint
+	chartTitleLink.title = chart.title
 
 	let chartTitleText = document.createElement('h3'); 
-	chartTitleText.appendChild(document.createTextNode(chart.title, chart.endpoint));
+	chartTitleText.className = "pull-left chart-title"
+	chartTitleText.appendChild(chartTitleLink);
 	chartTitleElm.appendChild(chartTitleText);
 
 	let chartTitleCol = document.createElement('div');
@@ -413,6 +426,8 @@ function renderChart (chart) {
 
 	chartContainerElm
 		.appendChild(chartTitleRow)
+	
+	chartContainerElm
 		.appendChild(chartSvgRow)
 
 	// Inject elements into DOM

@@ -1,4 +1,4 @@
-package commands
+package checklist
 
 import (
 	"context"
@@ -6,22 +6,21 @@ import (
 
 	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
 	"github.com/urfave/cli"
-	"google.golang.org/grpc"
 )
 
-func listEndpoint(cliContext *cli.Context) {
-	// Set up a connection to the server.
-	conn, err := grpc.Dial(cliContext.String("host"), grpc.WithInsecure())
+func checkEndpoint(cliContext *cli.Context) {
+	conn, err := createGrpcClient(cliContext)
 	if err != nil {
 		log.Println("could not connect to grpc server", err)
+		return
 	}
 	defer conn.Close()
 	c := checkupservice.NewCheckupClient(conn)
 
-	r, err := c.ListEndpoint(context.Background(), &checkupservice.ListEndpointRequest{Check: false})
+	r, err := c.ListEndpoint(context.Background(), &checkupservice.ListEndpointRequest{Check: true})
 
 	if err != nil {
-		log.Println("failed to get list of endpoints", err)
+		log.Fatalf("could not list endpoints: %v", err)
 	} else {
 		for _, endpoint := range r.Endpoints {
 			log.Println(endpoint.Name, " ", endpoint.Url, " ", endpoint.Status)

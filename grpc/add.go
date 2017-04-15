@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"golang.org/x/net/context"
-
 	checkup "github.com/AdhityaRamadhanus/checkupd"
 	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
+	"golang.org/x/net/context"
 )
 
 //AddTCPEndpoint is grpc service to add tcp endpoint to checkup server
