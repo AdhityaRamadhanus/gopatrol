@@ -57,6 +57,51 @@ var Commands = cli.Commands{
 		},
 	},
 	{
+		Name:  "setup-daemon",
+		Usage: "Setup daemon",
+		Subcommands: []cli.Command{
+			{
+				Name:   "fs",
+				Usage:  "setup status page using filesystem as storage",
+				Action: setupFSDaemon,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "log",
+						Value: "./checkup_config/logs",
+						Usage: "url to serve the status page",
+					},
+				},
+			},
+			{
+				Name:   "s3",
+				Usage:  "setup status page using filesystem as storage",
+				Action: setupS3Daemon,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "accesskeyid, i",
+						Value: "",
+						Usage: "S3 Access Key ID",
+					},
+					cli.StringFlag{
+						Name:  "secretaccesskey, k",
+						Value: "",
+						Usage: "S3 Secret",
+					},
+					cli.StringFlag{
+						Name:  "region, r",
+						Value: "",
+						Usage: "S3 Region",
+					},
+					cli.StringFlag{
+						Name:  "bucket, b",
+						Value: "",
+						Usage: "S3 Bucket",
+					},
+				},
+			},
+		},
+	},
+	{
 		Name:   "daemon",
 		Usage:  "run daemon",
 		Action: runDaemon,

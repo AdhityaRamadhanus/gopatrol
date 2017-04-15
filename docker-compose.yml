@@ -1,15 +1,5 @@
 version: '2'
 services:
-  checkupd:
-    image: checkupd:v1.0.0
-    container_name: checkupd
-    restart: always
-    ports:
-      - "9009:9009"
-    network_mode: "host"
-    volumes:
-      - "./checkup_config/checkup.json:/checkup/checkup.json"
-      - "./checkup_config/logs:/checkup/logs"
   statuspage:
     image: abiosoft/caddy
     container_name: caddy
