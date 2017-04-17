@@ -16,6 +16,7 @@ type ServiceHandler struct {
 	CheckupServer *checkup.Checkup
 	globalLock    sync.RWMutex
 	ConfigPath    string
+	CheckInterval time.Duration
 }
 
 //NewServiceHandler create new ServiceHandler from a configfile (checkup.json)
@@ -42,7 +43,7 @@ func NewServiceHandler(configFile string) (*ServiceHandler, error) {
 //Run the main loop for checkup to check endpoints and should be run as a goroutine
 func (handler *ServiceHandler) Run() {
 	for {
-		timer := time.After(time.Second * 10)
+		timer := time.After(handler.CheckInterval)
 		select {
 		case <-timer: //hardcoded for now
 			// Obtain Lock, makesure no function updating the Checkers

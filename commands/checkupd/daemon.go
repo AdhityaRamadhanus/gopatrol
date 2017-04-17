@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	checkupgrpc "github.com/AdhityaRamadhanus/checkupd/grpc"
 	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
@@ -22,6 +23,10 @@ func runTLSDaemon(cliContext *cli.Context) {
 		log.Println(err)
 		os.Exit(1)
 	}
+	// Set Check Interval
+	interval, _ := time.ParseDuration(cliContext.String("interval"))
+	serviceHandler.CheckInterval = interval
+
 	// Handle SIGINT, SIGTERN, SIGHUP signal from OS
 	termChan := make(chan os.Signal, 1)
 	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -69,6 +74,11 @@ func runDaemon(cliContext *cli.Context) {
 		log.Println(err)
 		os.Exit(1)
 	}
+	// Set Check Interval
+	interval, _ := time.ParseDuration(cliContext.String("interval"))
+	log.Println(interval)
+	serviceHandler.CheckInterval = interval
+
 	// Handle SIGINT, SIGTERN, SIGHUP signal from OS
 	termChan := make(chan os.Signal, 1)
 	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)

@@ -186,6 +186,8 @@ Serve Status Page
 ```bash
 docker-compose up
 ```
+(Modified version, still in progress)
+![checkup](https://cloud.githubusercontent.com/assets/5761975/25096466/888ca154-23ca-11e7-910d-59be4c610989.png)
 
 Setting Endpoints
 ----------------

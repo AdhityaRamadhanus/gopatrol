@@ -112,6 +112,11 @@ var Commands = cli.Commands{
 				Usage: "url to bind the daemon",
 			},
 			cli.StringFlag{
+				Name:  "interval",
+				Value: "1m",
+				Usage: "url to bind the daemon",
+			},
+			cli.StringFlag{
 				Name:  "proto",
 				Value: "unix",
 				Usage: "url to bind the daemon",
@@ -131,6 +136,11 @@ var Commands = cli.Commands{
 			cli.StringFlag{
 				Name:  "config",
 				Value: "checkup_config/checkup.json",
+				Usage: "url to bind the daemon",
+			},
+			cli.StringFlag{
+				Name:  "interval",
+				Value: "1m",
 				Usage: "url to bind the daemon",
 			},
 			cli.StringFlag{
