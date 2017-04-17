@@ -35,6 +35,7 @@ setInterval(function() {
 
 function processNewCheckFile (json, filename) {
 	checkup.checks.push(json);
+	checkup.checkLength++;
 
 	// update the timestamp of the last check file's timestamp
 	var dashLoc = filename.indexOf("-");
@@ -94,11 +95,14 @@ function processNewCheckFile (json, filename) {
 }
 
 function allCheckFilesLoaded (numChecksLoaded, numResultsLoaded) {
+	// console.log(checkup.checks[checkup.checkLength-1])
+	let currentEndpoints = checkup.checks[checkup.checkLength - 1].map((check) => check.title)
+	console.log(currentEndpoints)
 	// Sort the result lists
 	checkup.orderedResults.sort(function(a, b) { return a.timestamp - b.timestamp; });
 	for (var endpoint in checkup.results)
 		checkup.results[endpoint].sort(function(a, b) { return a.timestamp - b.timestamp; });
-
+	
 	// Create events for the timeline
 
 	var newEvents = [];
@@ -158,9 +162,18 @@ function allCheckFilesLoaded (numChecksLoaded, numResultsLoaded) {
 		var e = newEvents[i];
 
 		// Save this event to the chart's event series so it will render on the graph
-		var imgFile = "ok.png", imgWidth = 15, imgHeight = 15; // the different icons look smaller/larger because of their shape
-		if (e.status == "down") { imgFile = "incident.png"; imgWidth = 20; imgHeight = 20; }
-		else if (e.status == "degraded") { imgFile = "degraded.png"; imgWidth = 25; imgHeight = 25; }
+		var imgFile = "ok.png"; 
+		var imgWidth = 10;
+		var imgHeight = 10; // the different icons look smaller/larger because of their shape
+		if (e.status == "down") { 
+			imgFile = "incident.png"; 
+			imgWidth = 10; 
+			imgHeight = 10; 
+		} else if (e.status == "degraded") { 
+			imgFile = "degraded.png"; 
+			imgWidth = 10; 
+			imgHeight = 10;
+		}
 		var chart = checkup.charts[e.result.endpoint];
 		chart.series.events.push({
 			timestamp: checkup.unixNanoToD3Timestamp(e.result.timestamp),
@@ -392,13 +405,6 @@ function renderChart (chart) {
 	let chartTitleElm = document.createElement('div');
 	chartTitleElm.className = "chart-title-container";
 
-// var a = document.createElement('a');
-// var linkText = document.createTextNode("my title text");
-// a.appendChild(linkText);
-// a.title = "my title text";
-// a.href = "http://example.com";
-// document.body.appendChild(a);
-
 	let chartTitleLink = document.createElement('a');
 	chartTitleLink.appendChild(document.createTextNode(chart.title))
 	chartTitleLink.href = chart.endpoint
@@ -476,7 +482,7 @@ function renderChart (chart) {
 		.style("display", "none");
 
 	focus.append("circle")
-		.attr("r", 2);
+		.attr("r", 3);
 
 	// Focus Text
 	let textRtt = focus.append("text")

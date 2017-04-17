@@ -33,9 +33,7 @@ var time = (function() {
 // formatDuration formats d (in nanoseconds) with
 // a proper unit suffix based on its value.
 checkup.formatDuration = function(d) {
-	if (d == 0)
-		return d+"ms";
-	else if (d < time.Millisecond)
+	if (d < time.Millisecond)
 		return Math.round(d*1e-3)+"µs";
 	else if (d < 10 * time.Second)
 		return Math.round(d*1e-6)+"ms";
@@ -58,22 +56,6 @@ checkup.leftpad = function(str, len, ch) {
 	while (++i < len) str = ch + str;
 	return str;
 }
-
-// timeSince renders the duration ms (in milliseconds) in human-friendly form.
-checkup.timeSince = function(ms) {
-	var seconds = Math.floor((new Date() - ms) / 1000);
-	var interval = Math.floor(seconds / 31536000);
-	if (interval > 1) return interval + " years";
-	interval = Math.floor(seconds / 2592000);
-	if (interval > 1) return interval + " months";
-	interval = Math.floor(seconds / 86400);
-	if (interval > 1) return interval + " days";
-	interval = Math.floor(seconds / 3600);
-	if (interval > 1) return interval + " hours";
-	interval = Math.floor(seconds / 60);
-	if (interval > 1) return interval + " minutes";
-	return Math.floor(seconds) + " seconds";
-};
 
 checkup.dateTimeString = function (ms) {
 	var d = new Date(ms);
@@ -127,6 +109,10 @@ checkup.checks = [];
 
 // Stores all the results, keyed by endpoint
 checkup.results = {};
+
+// Stores all the current endpoints (taken from the latest result)
+checkup.endpoints = [];
+checkup.checkLength = 0;
 
 // Stores all the results, keyed by timestamp indicated in the JSON
 // of the check file (may be multiple results with same timestamp)
