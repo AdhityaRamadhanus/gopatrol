@@ -291,6 +291,22 @@ OPTIONS:
 
 ```
 
+3. Adding DNS endpoint
+```bash
+NAME:
+   checklist add-dns - Add dns endpoints to checkup
+
+USAGE:
+   checklist add-dns [command options] name url hostname
+
+OPTIONS:
+   --tls                              Send request over tls
+   --host value                       grpc server address (default: "/tmp/checkupd.sock")
+   --attempts value, -a value         how many times to check endpoint (default: 5)
+   --thresholdrtt value, --rtt value  Threshold Rtt to define a degraded endpoint (default: 0)
+   --timeout value                    Timeout to established a tls connection (default: 3000000000)
+```
+
 Just like adding endpoint, you can either modify the checkup.json or delete them through cli
 
 1. Deleting Endpoint
