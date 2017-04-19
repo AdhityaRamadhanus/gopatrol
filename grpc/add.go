@@ -62,3 +62,23 @@ func (handler *ServiceHandler) AddHTTPEndpoint(ctx context.Context, request *che
 	log.Printf(message)
 	return &checkupservice.EndpointResponse{Message: message}, nil
 }
+
+//AddDNSEndpoint is grpc service to add dns endpoint to checkup server
+func (handler *ServiceHandler) AddDNSEndpoint(ctx context.Context, request *checkupservice.AddDNSEndpointRequest) (*checkupservice.EndpointResponse, error) {
+	handler.globalLock.Lock()
+	defer handler.globalLock.Unlock()
+	log.Println(request)
+	dnsChecker := checkup.DNSChecker{
+		Name:         request.Endpoint.Name,
+		URL:          request.Endpoint.Url,
+		ThresholdRTT: time.Duration(request.Endpoint.Thresholdrtt),
+		Attempts:     int(request.Endpoint.Attempts),
+		Timeout:      time.Duration(request.Timeout),
+		Host:         request.Hostname,
+	}
+
+	handler.CheckupServer.Checkers = append(handler.CheckupServer.Checkers, dnsChecker)
+	message := fmt.Sprintf("DNS Endpoint %s->%s %s Added", dnsChecker.Name, dnsChecker.URL, request.Hostname)
+	log.Printf(message)
+	return &checkupservice.EndpointResponse{Message: message}, nil
+}
