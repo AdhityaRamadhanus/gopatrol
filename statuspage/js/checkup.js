@@ -110,10 +110,6 @@ checkup.checks = [];
 // Stores all the results, keyed by endpoint
 checkup.results = {};
 
-// Stores all the current endpoints (taken from the latest result)
-checkup.endpoints = [];
-checkup.checkLength = 0;
-
 // Stores all the results, keyed by timestamp indicated in the JSON
 // of the check file (may be multiple results with same timestamp)
 checkup.groupedResults = {};

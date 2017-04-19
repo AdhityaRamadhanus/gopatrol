@@ -35,7 +35,6 @@ setInterval(function() {
 
 function processNewCheckFile (json, filename) {
 	checkup.checks.push(json);
-	checkup.checkLength++;
 
 	// update the timestamp of the last check file's timestamp
 	var dashLoc = filename.indexOf("-");
@@ -90,14 +89,12 @@ function processNewCheckFile (json, filename) {
 		}
 	}
 
-	if (checkup.domReady)
+	if (checkup.domReady) {
 		makeGraphs();
+	}
 }
 
 function allCheckFilesLoaded (numChecksLoaded, numResultsLoaded) {
-	// console.log(checkup.checks[checkup.checkLength-1])
-	let currentEndpoints = checkup.checks[checkup.checkLength - 1].map((check) => check.title)
-	console.log(currentEndpoints)
 	// Sort the result lists
 	checkup.orderedResults.sort(function(a, b) { return a.timestamp - b.timestamp; });
 	for (var endpoint in checkup.results)
@@ -260,6 +257,18 @@ function allCheckFilesLoaded (numChecksLoaded, numResultsLoaded) {
 	}
 
 	makeGraphs(); // must render graphs again after we've filled in the event series
+	updateInfoBar();
+
+}
+
+function updateInfoBar () {
+	let checkLen = checkup.checks.length
+	let totalChecksElm = document.getElementById('info-totalchecks')
+	totalChecksElm.innerHTML = checkLen
+	let healthyEndpointElm = document.getElementById('info-totalhealthy')
+	healthyEndpointElm.innerHTML = checkup.checks[checkLen - 1].filter((check) => check.healthy).length
+	let downEndpointElm = document.getElementById('info-totaldown')
+	downEndpointElm.innerHTML = checkup.checks[checkLen - 1].filter((check) => !check.healthy).length
 }
 
 function makeGraphs () {
@@ -368,14 +377,14 @@ function makeGraph (chart, endpoint) {
 		.attr("y", (d, i) => chart.yScale(d.rtt) - (d.imgHeight/2))
 		.attr("data-eventid", (d, i) => d.eventid)
 		.attr("class", (d, i) => "event-item event-id-"+d.eventid)
-		.on("mouseover", () => {
-			let events = document.querySelectorAll(".event-item:not(.event-id-"+this.getAttribute("data-eventid")+")");
+		.on("mouseover", (e) => {
+			let events = document.querySelectorAll(".event-item:not(.event-id-"+e.eventid+")");
 			events.forEach((event) => {
 				event.style.opacity = ".25";
 			})
 		})
-		.on("mouseout", () => {
-			let events = document.querySelectorAll(".event-item:not(.event-id-"+this.getAttribute("data-eventid")+")");
+		.on("mouseout", (e) => {
+			let events = document.querySelectorAll(".event-item:not(.event-id-"+e.eventid+")");
 			events.forEach((event) => {
 				event.style.opacity = "";
 			})
@@ -493,14 +502,6 @@ function renderChart (chart) {
 		.attr("x", 9)
 		.attr("dy", ".35em")
 		.attr("class", "focus-text ts");
-
-	// Time Frame Text
-	let timeFrameText = '14 April 2017'
-	let timeFrame = chart.svg
-		.append('text')
-		.attr('x', chart.width/2 - timeFrameText.length * 2.5)
-		.attr('y', chart.height + 40)
-		.text(timeFrameText)
 	
 	// Next we build an overlay to cover the data area,
 	// so when the mouse hovers it we can show the point.
