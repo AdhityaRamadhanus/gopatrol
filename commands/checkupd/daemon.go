@@ -17,6 +17,10 @@ import (
 )
 
 func runTLSDaemon(cliContext *cli.Context) {
+	intervalRaw := "1m"
+	if cliContext.NArg() > 0 {
+		intervalRaw = cliContext.Args().Get(0)
+	}
 	serviceHandler, err := checkupgrpc.NewServiceHandler(cliContext.String("config"))
 
 	if err != nil {
@@ -24,7 +28,7 @@ func runTLSDaemon(cliContext *cli.Context) {
 		os.Exit(1)
 	}
 	// Set Check Interval
-	interval, _ := time.ParseDuration(cliContext.String("interval"))
+	interval, _ := time.ParseDuration(intervalRaw)
 	serviceHandler.CheckInterval = interval
 
 	// Handle SIGINT, SIGTERN, SIGHUP signal from OS
@@ -32,7 +36,7 @@ func runTLSDaemon(cliContext *cli.Context) {
 	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	// Prepare Server
-	listener, err := net.Listen("tcp", cliContext.String("port"))
+	listener, err := net.Listen("tcp", cliContext.String("address"))
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -60,7 +64,7 @@ func runTLSDaemon(cliContext *cli.Context) {
 	go serviceHandler.Run()
 	// Checkup Goroutine
 
-	log.Println("Tcp server is running at ", cliContext.String("port"))
+	log.Println("Tcp server is running at ", cliContext.String("address"))
 	if err := tcpServer.Serve(listener); err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -68,6 +72,10 @@ func runTLSDaemon(cliContext *cli.Context) {
 }
 
 func runDaemon(cliContext *cli.Context) {
+	intervalRaw := "1m"
+	if cliContext.NArg() > 0 {
+		intervalRaw = cliContext.Args().Get(0)
+	}
 	serviceHandler, err := checkupgrpc.NewServiceHandler(cliContext.String("config"))
 
 	if err != nil {
@@ -75,8 +83,8 @@ func runDaemon(cliContext *cli.Context) {
 		os.Exit(1)
 	}
 	// Set Check Interval
-	interval, _ := time.ParseDuration(cliContext.String("interval"))
-	log.Println(interval)
+	interval, _ := time.ParseDuration(intervalRaw)
+
 	serviceHandler.CheckInterval = interval
 
 	// Handle SIGINT, SIGTERN, SIGHUP signal from OS

@@ -49,7 +49,7 @@ var Commands = cli.Commands{
 					},
 					cli.StringFlag{
 						Name:  "bucket, b",
-						Value: "",
+						Value: "us-east-1",
 						Usage: "S3 Bucket",
 					},
 				},
@@ -62,19 +62,19 @@ var Commands = cli.Commands{
 		Subcommands: []cli.Command{
 			{
 				Name:   "fs",
-				Usage:  "setup status page using filesystem as storage",
+				Usage:  "setup daemon using filesystem as storage",
 				Action: setupFSDaemon,
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "log",
 						Value: "./checkup_config/logs",
-						Usage: "url to serve the status page",
+						Usage: "directory to save the logs (check results)",
 					},
 				},
 			},
 			{
 				Name:   "s3",
-				Usage:  "setup status page using filesystem as storage",
+				Usage:  "setup daemon using s3 as storage",
 				Action: setupS3Daemon,
 				Flags: []cli.Flag{
 					cli.StringFlag{
@@ -109,22 +109,17 @@ var Commands = cli.Commands{
 			cli.StringFlag{
 				Name:  "config",
 				Value: "checkup_config/checkup.json",
-				Usage: "url to bind the daemon",
-			},
-			cli.StringFlag{
-				Name:  "interval",
-				Value: "1m",
-				Usage: "url to bind the daemon",
+				Usage: "config file for checkup",
 			},
 			cli.StringFlag{
 				Name:  "proto",
 				Value: "unix",
-				Usage: "url to bind the daemon",
+				Usage: "protocol to run the daemon",
 			},
 			cli.StringFlag{
 				Name:  "address",
 				Value: "/tmp/checkupd.sock",
-				Usage: "url to bind the daemon",
+				Usage: "address of the daemon",
 			},
 		},
 	},
@@ -136,17 +131,12 @@ var Commands = cli.Commands{
 			cli.StringFlag{
 				Name:  "config",
 				Value: "checkup_config/checkup.json",
-				Usage: "url to bind the daemon",
+				Usage: "config file for checkup",
 			},
 			cli.StringFlag{
-				Name:  "interval",
-				Value: "1m",
-				Usage: "url to bind the daemon",
-			},
-			cli.StringFlag{
-				Name:  "port",
+				Name:  "address",
 				Value: ":9009",
-				Usage: "url to bind the daemon",
+				Usage: "address of the daemon",
 			},
 			cli.StringFlag{
 				Name:  "cert",

@@ -4,45 +4,46 @@ package service;
 
 // The checkup service definition.
 service checkup {
-	// Endpoint Manipulation Function
-	rpc AddHTTPEndpoint (HttpEndpointRequest) returns (EndpointResponse) {}
-	rpc AddTCPEndpoint (TcpEndpointRequest) returns (EndpointResponse) {}
-	rpc DeleteEndpoint (InquiryEndpointRequest) returns (EndpointResponse) {}
+	// Add Endpoint Function
+	rpc AddHTTPEndpoint (AddHttpEndpointRequest) returns (EndpointResponse) {}
+	rpc AddTCPEndpoint (AddTcpEndpointRequest) returns (EndpointResponse) {}
+	
+	// Delete Endpoint Function
+	rpc DeleteEndpoint (DeleteEndpointRequest) returns (EndpointResponse) {}
 
 	// Endpoint Inspection Function
 	rpc ListEndpoint (ListEndpointRequest) returns (ListEndpointResponse) {}
-	// rpc InspectEndpoint (InquiryEndpointRequest) returns (InquiryResponse) {}
 }
 
 message GenericEndpointRequest {
 	string name = 1;
 	string url = 2;
 	int32 attempts = 3;
+	int64 thresholdrtt = 4;
 }
 
-message HttpEndpointRequest {
+message AddHttpEndpointRequest {
 	GenericEndpointRequest endpoint = 1;
+	int32 upstatus = 2;
+	string must_contain = 3;
+	string must_not_contain =4;
+	string headers = 5;
 }
 
-message TcpEndpointRequest {
+message AddTcpEndpointRequest {
 	GenericEndpointRequest endpoint = 1;
-	bool tls = 2;
-	string tls_skip_verify = 3;
+	bool tls_enabled = 2;
+	bool tls_skip_verify = 3;
 	string tls_ca_file = 4;
+	int64 timeout = 5;
 }
 
-message InquiryEndpointRequest {
-	string name = 1;
+message DeleteEndpointRequest {
+	string url = 1;
 }
 
 message EndpointResponse {
 	string message = 1;
-}
-
-message InquiryResponse {
-	string name = 1;
-	string url = 2;
-	string status = 3;
 }
 
 message ListEndpointRequest {

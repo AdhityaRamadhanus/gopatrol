@@ -17,6 +17,18 @@ type TCPChecker struct {
 	// URL is the URL of the endpoint.
 	URL string `json:"endpoint_url"`
 
+	// ThresholdRTT is the maximum round trip time to
+	// allow for a healthy endpoint. If non-zero and a
+	// request takes longer than ThresholdRTT, the
+	// endpoint will be considered unhealthy. Note that
+	// this duration includes any in-between network
+	// latency.
+	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
+
+	// Attempts is how many requests the client will
+	// make to the endpoint in a single check.
+	Attempts int `json:"attempts,omitempty"`
+
 	// TLSEnabled controls whether to enable TLS or not.
 	// If set, TLS is enabled.
 	TLSEnabled bool `json:"tls,omitempty"`
@@ -32,18 +44,6 @@ type TCPChecker struct {
 	// Timeout is the maximum time to wait for a
 	// TCP connection to be established.
 	Timeout time.Duration `json:"timeout,omitempty"`
-
-	// ThresholdRTT is the maximum round trip time to
-	// allow for a healthy endpoint. If non-zero and a
-	// request takes longer than ThresholdRTT, the
-	// endpoint will be considered unhealthy. Note that
-	// this duration includes any in-between network
-	// latency.
-	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
-
-	// Attempts is how many requests the client will
-	// make to the endpoint in a single check.
-	Attempts int `json:"attempts,omitempty"`
 }
 
 func (c TCPChecker) GetName() string {
@@ -110,7 +110,6 @@ func (c TCPChecker) doChecks() Attempts {
 				conn.Close()
 			}
 		}
-
 		checks[i].RTT = time.Since(start)
 		if err != nil {
 			checks[i].Error = err.Error()

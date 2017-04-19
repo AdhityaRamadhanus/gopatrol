@@ -14,11 +14,6 @@ type DNSChecker struct {
 	Name string `json:"endpoint_name"`
 	// This is the name of the DNS server you are testing.
 	URL string `json:"endpoint_url"`
-	// This is the fqdn of the target server to query the DNS server for.
-	Host string `json:"hostname_fqdn,omitempty"`
-	// Timeout is the maximum time to wait for a
-	// TCP connection to be established.
-	Timeout time.Duration `json:"timeout,omitempty"`
 	// ThresholdRTT is the maximum round trip time to
 	// allow for a healthy endpoint. If non-zero and a
 	// request takes longer than ThresholdRTT, the
@@ -29,6 +24,12 @@ type DNSChecker struct {
 	// Attempts is how many requests the client will
 	// make to the endpoint in a single check.
 	Attempts int `json:"attempts,omitempty"`
+
+	// This is the fqdn of the target server to query the DNS server for.
+	Host string `json:"hostname_fqdn,omitempty"`
+	// Timeout is the maximum time to wait for a
+	// TCP connection to be established.
+	Timeout time.Duration `json:"timeout,omitempty"`
 }
 
 func (c DNSChecker) GetName() string {

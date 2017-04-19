@@ -7,9 +7,14 @@ VERSION ?= 1.0.0
 
 # test target
 
+PROTOC_BIN=~/protoc/bin/protoc
+
 # target #
 
 default: clean build_checkupd build_checklist
+
+build_grpc:
+	$(PROTOC_BIN) -I service/ --go_out=plugins=grpc:service grpc/service/service.proto
 
 build_docker: 
 	docker build --tag checkupd:v${VERSION} .
