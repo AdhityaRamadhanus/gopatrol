@@ -11,18 +11,18 @@ import (
 )
 
 //DeleteEndpoint is grpc service to delete some endpoint
-func (handler *ServiceHandler) DeleteEndpoint(ctx context.Context, request *checkupservice.InquiryEndpointRequest) (*checkupservice.EndpointResponse, error) {
+func (handler *ServiceHandler) DeleteEndpoint(ctx context.Context, request *checkupservice.DeleteEndpointRequest) (*checkupservice.EndpointResponse, error) {
 	handler.globalLock.Lock()
 	defer handler.globalLock.Unlock()
 	var deletedEndpoint checkup.Checker
 	for i, endpoint := range handler.CheckupServer.Checkers {
-		if endpoint.GetName() == request.Name {
+		if endpoint.GetURL() == request.Url {
 			deletedEndpoint = handler.CheckupServer.Checkers[i]
 			handler.CheckupServer.Checkers = append(handler.CheckupServer.Checkers[:i], handler.CheckupServer.Checkers[i+1:]...)
 			break
 		}
 	}
-	message := "Cannot find endpoint"
+	message := "Cannot find endpoint to delete"
 	if deletedEndpoint != nil {
 		message = fmt.Sprintf("Endpoint %s->%s Deleted", deletedEndpoint.GetName(), deletedEndpoint.GetURL())
 	}
