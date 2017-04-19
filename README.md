@@ -259,13 +259,17 @@ NAME:
    checklist add-tcp - Add tcp endpoints to checkup
 
 USAGE:
-   checklist add-tcp [command options] [arguments...]
+   checklist add-tcp [command options] name url
 
 OPTIONS:
-   --name value     Name of endpoint
-   --address value  Address to check
-   --tcp-tls        Is it tls endpoint?
-   --host value     grpc server address (default: "/tmp/checkupd.sock")
+   --tls                              Send request over tls
+   --host value                       grpc server address (default: "/tmp/checkupd.sock")
+   --attempts value, -a value         how many times to check endpoint (default: 5)
+   --thresholdrtt value, --rtt value  Threshold Rtt to define a degraded endpoint (default: 0)
+   --tls-enabled                      Enable TLS connection to endpoint
+   --tls-ca value                     Certificate file to established tls connection
+   --tls-skip-verify                  Skip verify tls certificate
+   --timeout value                    Timeout to established a tls connection (default: 3000000000)
 ```
 
 2. Adding Http endpoint
@@ -274,12 +278,18 @@ NAME:
    checklist add-http - Add endpoints to checkup
 
 USAGE:
-   checklist add-http [command options] [arguments...]
+   checklist add-http [command options] name url
 
 OPTIONS:
-   --name value  Name of endpoint
-   --url value   URL to check
-   --host value  grpc server address (default: "/tmp/checkupd.sock")
+   --tls                              Send request over tls
+   --host value                       grpc server address (default: "/tmp/checkupd.sock")
+   --attempts value, -a value         how many times to check endpoint (default: 5)
+   --thresholdrtt value, --rtt value  Threshold Rtt to define a degraded endpoint (default: 0)
+   --mustcontain value                HTML content that a page should contain to determine whether a page is up or down
+   --mustnotcontain value             HTML content that a page should not contain to determine whether a page is up or down
+   --headers value                    Http Headers to send along the check request
+   --upstatus value                   Http status code to define a healthy page (default: 200)
+
 ```
 
 Just like adding endpoint, you can either modify the checkup.json or delete them through cli
@@ -290,12 +300,11 @@ NAME:
    checklist delete - delete endpoint
 
 USAGE:
-   checklist delete [command options] [arguments...]
+   checklist delete [command options] url
 
 OPTIONS:
-   --tls         Name of endpoint
+   --tls         Send request over tls
    --host value  grpc server address (default: "/tmp/checkupd.sock")
-   --name value  endpoint name
 ```
 
 List Endpoint
@@ -308,6 +317,7 @@ USAGE:
    checklist list [command options] [arguments...]
 
 OPTIONS:
+   --tls         Send request over tls
    --host value  grpc server address (default: "/tmp/checkupd.sock")
 ```
 
@@ -321,6 +331,7 @@ USAGE:
    checklist check [command options] [arguments...]
 
 OPTIONS:
+   --tls         Send request over tls
    --host value  grpc server address (default: "/tmp/checkupd.sock")
 ```
 

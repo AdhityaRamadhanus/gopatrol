@@ -105,12 +105,6 @@ var Commands = cli.Commands{
 		Name:   "delete",
 		Usage:  "delete endpoint",
 		Action: deleteEndpoint,
-		Flags: append(defaultConnFlags,
-			cli.StringFlag{
-				Name:  "url",
-				Value: "",
-				Usage: "endpoint url to delete",
-			},
-		),
+		Flags:  defaultConnFlags,
 	},
 }
