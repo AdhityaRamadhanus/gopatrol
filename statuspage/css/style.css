@@ -4,65 +4,96 @@
 }
 
 body {
-	font-family: 'Source Sans Pro', sans-serif;
-	font-size: 16px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #FFF;
+	background: #252B30;
 }
 
 header {
+	padding-bottom: 10px;
 	margin-bottom: 20px;
 	box-shadow: 0 2px 100px rgba(0, 0, 0, .15);
 	transition: background-color 2s ease;
 	border-bottom: 1px solid #FFF;
 }
 
+.app {
+	padding: 10px;
+}
+
 main {
 	display: flex;
 	flex-wrap: wrap;
-	justify-content: space-between;
-	padding: 0 15px;
+}
+
+.endpoint-status {
+	width: 80%;
+}
+
+.width-25 {
+	width: 24.5%;
 }
 
 #chart-grid {
 	display: flex;
 	flex-wrap: wrap;
 	align-content: flex-start;
-	width: 75%;
+	width: 100%;
 }
 
-.chart-50  { width: 50%; }
-.chart-100 { width: 100%; }
+.chart-50  { 
+	width: 49.5%; 
+	font-size: 18px;
+}
+.chart-100 { 
+	width: 99%; 
+	font-size: 24px;
+}
 
-#overall-status-text {
-	padding: 50px 10px 10px 10px;
+.overall-status-icon {
+	font-size:36px;
 	color: #FFF;
 }
 
-#overall-status.green  { background-color: #40D24C; }
-#overall-status.yellow { background-color: #D2C640; }
-#overall-status.red    { background-color: #D24040; }
-#overall-status.gray   { background-color: #B8B8B8; }
-
-#overall-status-text {
+.overall-status-text {
 	font: bold 42px 'Source Sans Pro', sans-serif;
 	text-transform: uppercase;
 	text-align: center;
 	line-height: 1em;
 }
 
+.pull-right {
+	float: right !important;
+}
+
 .infobar {
 	font-size: 12px;
 	font-family: sans-serif;
 	padding: 10px;
-	background: rgba(255, 255, 255, .8);
 }
 
-.infobar .item {
+.infobar-item {
 	display: inline-block;
-	margin-right: 2em;
+	background-color: #1F2328;
+	margin-bottom: 1em;
+}
+
+.border-top-black {
+	border-top: 4px solid #0F1214;
+}
+
+.border-top-green {
+	border-top: 4px solid #5DB56A;
+}
+
+.border-top-red {
+	border-top: 4px solid #FF303E;
 }
 
 #timeline {
-	width: 25%;
+	width: 20%;
 	position: relative;
 	z-index: 1;
 }
@@ -140,20 +171,21 @@ main {
 	font-size: 14px;
 }
 
-
-
-
 .chart {
-	padding-bottom: 20px;
+	padding: 2px;
+}
+
+.chart-title-container {
+	padding-left: 5px;
 }
 
 .chart-title {
 	font-weight: bold;
-	text-align: center;
+	color: rgba(255,255,255,0.4);
 }
 
 .chart-title a {
-	color: #2D6F96;
+	color: rgba(255,255,255,0.4);
 	text-decoration: none;
 }
 
@@ -164,6 +196,12 @@ main {
 svg {
   font: 10px sans-serif;
   max-width: 100%; /* thanks for nothin, Safari */
+}
+
+.chart-container {
+	border-top: 1px solid rgba(255, 255, 255, 0.15);
+	background: #1F2328;
+	margin: 0 3px 3px 0;
 }
 
 .chart-container .chart svg {
@@ -182,11 +220,7 @@ svg {
 .line {
   fill: none;
   stroke: #CCC;
-  stroke-width: 2px;
-}
-
-.chart-container .chart .line {
-	stroke-width: 4px;
+  stroke-width: 1px;
 }
 
 .min.line,
@@ -209,11 +243,6 @@ svg {
 	stroke: #B1DC9C;
 }
 
-.line.main {
-	stroke: #333;
-	stroke-linecap: round;
-}
-
 .line.max {
 	stroke: #FFA447;
 }
@@ -228,7 +257,7 @@ svg {
 }
 
 .focus circle {
-	fill: #333;
+	fill: #FFF;
 	stroke: #333;
 }
 
@@ -280,7 +309,7 @@ footer {
 	#timeline   { width: 40%; }
 	.chart-50   { width: 100%; }
 
-	#overall-status-text {
+	.overall-status-text {
 		font-size: 34px;
 		padding: 15px;
 	}

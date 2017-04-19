@@ -33,3 +33,6 @@ Caddyfile
 caddy_config/
 checkup_config/
 out/
+
+statuspage/js/config.js
+statuspage/index.html

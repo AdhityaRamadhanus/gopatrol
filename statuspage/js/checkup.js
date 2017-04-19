@@ -33,9 +33,7 @@ var time = (function() {
 // formatDuration formats d (in nanoseconds) with
 // a proper unit suffix based on its value.
 checkup.formatDuration = function(d) {
-	if (d == 0)
-		return d+"ms";
-	else if (d < time.Millisecond)
+	if (d < time.Millisecond)
 		return Math.round(d*1e-3)+"µs";
 	else if (d < 10 * time.Second)
 		return Math.round(d*1e-6)+"ms";
@@ -59,40 +57,31 @@ checkup.leftpad = function(str, len, ch) {
 	return str;
 }
 
-// timeSince renders the duration ms (in milliseconds) in human-friendly form.
-checkup.timeSince = function(ms) {
-	var seconds = Math.floor((new Date() - ms) / 1000);
-	var interval = Math.floor(seconds / 31536000);
-	if (interval > 1) return interval + " years";
-	interval = Math.floor(seconds / 2592000);
-	if (interval > 1) return interval + " months";
-	interval = Math.floor(seconds / 86400);
-	if (interval > 1) return interval + " days";
-	interval = Math.floor(seconds / 3600);
-	if (interval > 1) return interval + " hours";
-	interval = Math.floor(seconds / 60);
-	if (interval > 1) return interval + " minutes";
-	return Math.floor(seconds) + " seconds";
-};
+checkup.dateTimeString = function (ms) {
+	var d = new Date(ms);
+	return d.getFullYear()+"-"
+		+ checkup.leftpad(d.getMonth()+1, 2, "0")+"-"
+		+ checkup.leftpad(d.getDate(), 2, "0")+"T"
+		+ checkup.leftpad(d.getHours(), 2, "0")+":"
+		+ checkup.leftpad(d.getMinutes(), 2, "0")+":"
+		+ checkup.leftpad(d.getSeconds(), 2, "0");
+}
+
+checkup.compactDateTimeString = function (ms) {
+	var d = new Date(ms);
+	return checkup.leftpad(d.getHours(), 2, "0")+":"
+		+ checkup.leftpad(d.getMinutes(), 2, "0")+":"
+		+ checkup.leftpad(d.getSeconds(), 2, "0");
+}
 
 // makeTimeTag returns a <time> tag (as a string) that
 // has the time since the timestamp, ms (in milliseconds).
 checkup.makeTimeTag = function(ms) {
 	// dateTimeString converts ms (in milliseconds) into
 	// a value usable in a <time> tag's datetime attribute.
-	function dateTimeString(ms) {
-		var d = new Date(ms);
-		return d.getFullYear()+"-"
-			+ checkup.leftpad(d.getMonth()+1, 2, "0")+"-"
-			+ checkup.leftpad(d.getDate(), 2, "0")+"T"
-			+ checkup.leftpad(d.getHours(), 2, "0")+":"
-			+ checkup.leftpad(d.getMinutes(), 2, "0")+":"
-			+ checkup.leftpad(d.getSeconds(), 2, "0")+"-"
-			+ checkup.leftpad((d.getTimezoneOffset()/60), 2, "0")+":00";
-	}
 
-	return '<time class="dynamic" datetime="'+dateTimeString(ms)+'">'
-			+ checkup.timeSince(ms)
+	return '<time class="dynamic" datetime="'+checkup.dateTimeString(ms)+'">'
+			+ checkup.dateTimeString(ms)
 			+ '</time>';
 }
 

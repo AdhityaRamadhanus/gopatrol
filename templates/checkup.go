@@ -41,28 +41,47 @@ var IndexHTML = `<!DOCTYPE html>
 		<script src="js/config.js"></script>
 		<script src="js/statuspage.js"></script>
 		<link rel="icon" href="images/favicon.png" id="favicon">
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,700">
+		<link rel="stylesheet" href="css/fontello.css">
 		<link rel="stylesheet" href="css/style.css">
 	</head>
 	<body>
-		<header id="overall-status" class="gray">
-			<div id="overall-status-text">
-				Loading
-			</div>
-			<div class="infobar">
-				<div class="item">
-					<b><span id="info-checkcount">&mdash;</span> checks</b> in the last <b><span id="info-timeframe">&mdash;</span></b>
+		<div class="app">
+			<header>
+				<div id="overall-status">
+					<i class="icon-stethoscope overall-status-icon"></i>
+					<span class="overall-status-text">Situation Normal</span>
 				</div>
-				<div class="item">
-					<b>Last check:</b> <span id="info-lastcheck">&mdash;</span>
-				</div>
-			</div>
-		</header>
+			</header>
 
-		<main>
-			<div id="chart-grid">
-				<!-- Populated by JavaScript -->
-				<span id="chart-placeholder">&nbsp;</span>
+			<main>
+				<div class="endpoint-status">
+				<div class="infobar-item border-top-black width-25">
+					<span class="totalcheck-text">
+						<b>Total Checks</b> <br>
+						<span id="info-totalchecks">0</span>
+					</span>
+				</div>
+				<div class="infobar-item border-top-green width-25">
+					<span class="totalhealthy-text">
+						<b>Healthy Endpoints</b> <br>
+						<span id="info-totalhealthy">0</span>
+					</span>
+				</div>
+				<div class="infobar-item border-top-red width-25">
+					<span class="totaldown-text">
+						<b>Down Endpoints</b> <br>
+						<span id="info-totaldown">0</span>
+					</span>
+				</div>
+				<div class="infobar-item border-top-black width-25">
+					<span class="overall-lastcheck-text">
+						<b>Last check</b> <br><span id="info-lastcheck"><time class="dynamic" datetime="">Unknown</time>
+						</span>
+					</span>
+				</div>
+				<div id="chart-grid">
+					<span id="chart-placeholder">&nbsp;</span>
+				</div>
 			</div>
 			<div id="timeline">
 				<div id="big-gap">

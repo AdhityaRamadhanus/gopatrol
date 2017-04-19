@@ -5,14 +5,12 @@ checkup.storage.setup(checkup.config.storage);
 
 // Once the DOM is loaded, go ahead and render the graphs
 // (if it hasn't been done already).
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 	checkup.domReady = true;
 
 	checkup.dom.favicon = document.getElementById("favicon");
 	checkup.dom.status = document.getElementById("overall-status");
-	checkup.dom.statustext = document.getElementById("overall-status-text");
-	checkup.dom.timeframe = document.getElementById("info-timeframe");
-	checkup.dom.checkcount = document.getElementById("info-checkcount");
+	checkup.dom.statustext = document.getElementsByClassName("overall-status-text")[0];
 	checkup.dom.lastcheck = document.getElementById("info-lastcheck");
 	checkup.dom.timeline = document.getElementById("timeline");
 
@@ -30,13 +28,12 @@ setInterval(function() {
 	var times = document.querySelectorAll("time.dynamic");
 	for (var i = 0; i < times.length; i++) {
 		var timeEl = times[i];
-		var ms = Date.parse(timeEl.getAttribute("datetime"));
-		timeEl.innerHTML = checkup.timeSince(ms);
+		timeEl.innerHTML = timeEl.getAttribute("datetime")
 	}
 }, 5000);
 
 
-function processNewCheckFile(json, filename) {
+function processNewCheckFile (json, filename) {
 	checkup.checks.push(json);
 
 	// update the timestamp of the last check file's timestamp
@@ -88,20 +85,21 @@ function processNewCheckFile(json, filename) {
 
 		if (!checkup.lastResultTs || ts > checkup.lastResultTs) {
 			checkup.lastResultTs = ts;
-			checkup.dom.lastcheck.innerHTML = checkup.makeTimeTag(checkup.lastResultTs)+" ago";
+			checkup.dom.lastcheck.innerHTML = checkup.makeTimeTag(checkup.lastResultTs);
 		}
 	}
 
-	if (checkup.domReady)
+	if (checkup.domReady) {
 		makeGraphs();
+	}
 }
 
-function allCheckFilesLoaded(numChecksLoaded, numResultsLoaded) {
+function allCheckFilesLoaded (numChecksLoaded, numResultsLoaded) {
 	// Sort the result lists
 	checkup.orderedResults.sort(function(a, b) { return a.timestamp - b.timestamp; });
 	for (var endpoint in checkup.results)
 		checkup.results[endpoint].sort(function(a, b) { return a.timestamp - b.timestamp; });
-
+	
 	// Create events for the timeline
 
 	var newEvents = [];
@@ -161,9 +159,18 @@ function allCheckFilesLoaded(numChecksLoaded, numResultsLoaded) {
 		var e = newEvents[i];
 
 		// Save this event to the chart's event series so it will render on the graph
-		var imgFile = "ok.png", imgWidth = 15, imgHeight = 15; // the different icons look smaller/larger because of their shape
-		if (e.status == "down") { imgFile = "incident.png"; imgWidth = 20; imgHeight = 20; }
-		else if (e.status == "degraded") { imgFile = "degraded.png"; imgWidth = 25; imgHeight = 25; }
+		var imgFile = "ok.png"; 
+		var imgWidth = 10;
+		var imgHeight = 10; // the different icons look smaller/larger because of their shape
+		if (e.status == "down") { 
+			imgFile = "incident.png"; 
+			imgWidth = 10; 
+			imgHeight = 10; 
+		} else if (e.status == "degraded") { 
+			imgFile = "degraded.png"; 
+			imgWidth = 10; 
+			imgHeight = 10;
+		}
 		var chart = checkup.charts[e.result.endpoint];
 		chart.series.events.push({
 			timestamp: checkup.unixNanoToD3Timestamp(e.result.timestamp),
@@ -250,41 +257,48 @@ function allCheckFilesLoaded(numChecksLoaded, numResultsLoaded) {
 	}
 
 	makeGraphs(); // must render graphs again after we've filled in the event series
+	updateInfoBar();
+
 }
 
-function makeGraphs() {
-	checkup.dom.timeframe.innerHTML = checkup.formatDuration(checkup.config.timeframe);
-	checkup.dom.checkcount.innerHTML = checkup.checks.length;
+function updateInfoBar () {
+	let checkLen = checkup.checks.length
+	let totalChecksElm = document.getElementById('info-totalchecks')
+	totalChecksElm.innerHTML = checkLen
+	let healthyEndpointElm = document.getElementById('info-totalhealthy')
+	healthyEndpointElm.innerHTML = checkup.checks[checkLen - 1].filter((check) => check.healthy).length
+	let downEndpointElm = document.getElementById('info-totaldown')
+	downEndpointElm.innerHTML = checkup.checks[checkLen - 1].filter((check) => !check.healthy).length
+}
 
+function makeGraphs () {
 	if (!checkup.placeholdersRemoved && checkup.checks.length > 0) {
 		// Remove placeholder to make way for the charts;
 		// placeholder necessary to give space in absense of charts.
-		if (phElem = document.getElementById("chart-placeholder"))
-			phElem.remove();
+		let placeHolderElm = document.getElementById("chart-placeholder");
+		if (placeHolderElm) placeHolderElm.remove(); 
 		checkup.placeholdersRemoved = true;
 	}
 
 	for (var endpoint in checkup.charts) {
 		makeGraph(checkup.charts[endpoint], endpoint);
   }
-
 	checkup.graphsMade = true;
 }
 
-function makeGraph(chart, endpoint) {
+function makeGraph (chart, endpoint) {
 	// Render chart to page if first time seeing this endpoint
-	if (!chart.elem) {
-		renderChart(chart);
-	}
+	if (!chart.elem) renderChart(chart);
 
-	chart.xScale.domain([
-		d3.min(chart.data, function(c) { return d3.min(c, function(d) { return d.timestamp; }); }),
-		d3.max(chart.data, function(c) { return d3.max(c, function(d) { return d.timestamp; }); })
-	]);
-	chart.yScale.domain([
-		0,
-		d3.max(chart.data, function(c) { return d3.max(c, function(d) { return d.rtt; }); })
-	]);
+	// Define scale for x axis
+	let xMax = d3.max(chart.data, c => d3.max(c, d => d.timestamp));
+	let xMin = d3.min(chart.data, c => d3.min(c, d => d.timestamp));
+	chart.xScale.domain([xMin, xMax]).nice();
+
+	// Define scale for y axis
+	let yMax = d3.max(chart.data, c => d3.max(c, d => d.rtt));
+	let yMin = d3.min(chart.data, c => d3.min(c, d => d.rtt));
+	chart.yScale.domain([0, yMax]).nice();
 
 	chart.xAxis = d3.svg.axis()
 		.scale(chart.xScale)
@@ -296,7 +310,7 @@ function makeGraph(chart, endpoint) {
 		.scale(chart.yScale)
 		.tickFormat(checkup.formatDuration)
 		.outerTickSize(0)
-		.ticks(2)
+		.ticks(5)
 		.orient("left");
 
 	if (chart.svg.selectAll(".x.axis")[0].length == 0) {
@@ -310,6 +324,7 @@ function makeGraph(chart, endpoint) {
 			.duration(checkup.animDuration)
 			.call(chart.xAxis);
 	}
+
 	if (chart.svg.selectAll(".y.axis")[0].length == 0) {
 		chart.svg.insert("g", ":first-child")
 			.attr("class", "y axis")
@@ -321,16 +336,15 @@ function makeGraph(chart, endpoint) {
 			.call(chart.yAxis);
 	}
 
-	chart.lines = chart.lineGroup.selectAll(".line")
-		.data(chart.data);
-	chart.events = chart.eventGroup.selectAll("image")
-		.data(chart.series.events);
+	chart.lines = chart.lineGroup.selectAll(".line").data(chart.data);
+	chart.events = chart.eventGroup.selectAll("image").data(chart.series.events);
 
 	// transition from old paths to new paths
 	chart.lines
 		.transition()
 		.duration(checkup.animDuration)
 		.attr("d", chart.line);
+
 	chart.events
 		.transition()
 		.duration(checkup.animDuration);
@@ -338,26 +352,43 @@ function makeGraph(chart, endpoint) {
 	// enter any new data (lines)
 	chart.lines.enter()
 	  .append("path")
-		.attr("class", function(d) {
-			if (d == chart.series.min) return "min line";
-			else if (d == chart.series.med) return "main line";
-			else if (d == chart.series.max) return "max line";
-			else if (d == chart.series.threshold) return "tolerance line";
-			else return "line";
+		.attr("class", (d) => {
+			switch (d) {
+				case chart.series.min:
+					return "min line";
+				case chart.series.med:
+					return "main line";
+				case chart.series.max:
+					return "max line";
+				case chart.series.threshold:
+					return "tolerance line";
+				default:
+					return "line"
+			}
 		})
 		.attr("d", chart.line);
 
 	// enter any new data (events)
 	chart.events.enter().append("svg:image")
-		.attr("width", function(d, i) { return d.imgWidth || 0; })
-		.attr("height", function(d, i) { return d.imgHeight || 0; })
-		.attr("xlink:href", function(d, i) { return "images/"+d.imgFile; })
-		.attr("x", function(d, i) { return chart.xScale(d.timestamp) - (d.imgWidth/2); })
-		.attr("y", function(d, i) { return chart.yScale(d.rtt) - (d.imgHeight/2); })
-		.attr("data-eventid", function(d, i) { return d.eventid; })
-		.attr("class", function(d, i) { return "event-item event-id-"+d.eventid; })
-		.on("mouseover", highlightSameEvent)
-		.on("mouseout", unhighlightSameEvent);
+		.attr("width", (d, i) => d.imgWidth || 0)
+		.attr("height", (d, i) => d.imgHeight || 0)
+		.attr("xlink:href", (d, i) => "images/"+d.imgFile)
+		.attr("x", (d, i) => chart.xScale(d.timestamp) - (d.imgWidth/2))
+		.attr("y", (d, i) => chart.yScale(d.rtt) - (d.imgHeight/2))
+		.attr("data-eventid", (d, i) => d.eventid)
+		.attr("class", (d, i) => "event-item event-id-"+d.eventid)
+		.on("mouseover", (e) => {
+			let events = document.querySelectorAll(".event-item:not(.event-id-"+e.eventid+")");
+			events.forEach((event) => {
+				event.style.opacity = ".25";
+			})
+		})
+		.on("mouseout", (e) => {
+			let events = document.querySelectorAll(".event-item:not(.event-id-"+e.eventid+")");
+			events.forEach((event) => {
+				event.style.opacity = "";
+			})
+		});
 
 	// exit any old data
 	chart.lines
@@ -365,48 +396,69 @@ function makeGraph(chart, endpoint) {
 		.remove();
 }
 
-
-function renderChart(chart) {
+function renderChart (chart) {
 	// Outer div is a wrapper that we use for layout
-	var el = document.createElement('div');
-	var containerSize = "chart-50";
+	let chartContainerElm = document.createElement('div');
+	chartContainerElm.className = "chart-container chart-50";
 	if (document.getElementsByClassName('chart-container').length == 0) {
-		containerSize = "chart-100";
+		chartContainerElm.className = "chart-container chart-100";
 	} else {
 		// It's possible that a chart was created that, at the time,
 		// was the only one, but now it is too wide, since there are
 		// at least two charts. Resize the wide one to be smaller.
-		var tooWide = document.querySelector('.chart-container.chart-100');
-		if (tooWide)
-			tooWide.className = "chart-container chart-50";
+		let wideChartElm = document.querySelector('.chart-container.chart-100');
+		if (wideChartElm) wideChartElm.className = "chart-container chart-50";
 	}
-	el.className = "chart-container "+containerSize;
 
 	// Div to contain the endpoint / title
-	var el2 = document.createElement('div');
-	el2.className = "chart-title";
-	var el2b = document.createElement('a'); el2b.setAttribute("href", chart.endpoint);
-	el2b.appendChild(document.createTextNode(chart.title));
-	el2.appendChild(el2b);
-	el.appendChild(el2);
+	let chartTitleElm = document.createElement('div');
+	chartTitleElm.className = "chart-title-container";
+
+	let chartTitleLink = document.createElement('a');
+	chartTitleLink.appendChild(document.createTextNode(chart.title))
+	chartTitleLink.href = chart.endpoint
+	chartTitleLink.title = chart.title
+
+	let chartTitleText = document.createElement('h3'); 
+	chartTitleText.className = "pull-left chart-title"
+	chartTitleText.appendChild(chartTitleLink);
+	chartTitleElm.appendChild(chartTitleText);
+
+	let chartTitleCol = document.createElement('div');
+	chartTitleCol.className = "col-md-12";
+	let chartTitleRow = document.createElement('div');
+	chartTitleRow.className = "row";
+
+	chartTitleCol.appendChild(chartTitleElm)
+	chartTitleRow.appendChild(chartTitleCol)
 
 	// Inner div is used to contain the actual svg tag
-	var el3 = document.createElement('div');
-	el3.className = "chart";
-	el.appendChild(el3);
+	let chartSvgElm = document.createElement('div');
+	chartSvgElm.className = "chart";
+	let chartSvgRow = document.createElement('div');
+	chartSvgRow.className = "row";
+	chartSvgRow.appendChild(chartSvgElm)
+
+	chartContainerElm
+		.appendChild(chartTitleRow)
+	
+	chartContainerElm
+		.appendChild(chartSvgRow)
 
 	// Inject elements into DOM
-	document.getElementById('chart-grid').appendChild(el);
+	document
+		.getElementById('chart-grid')
+		.appendChild(chartContainerElm);
 
 	// Save it with the chart and use D3 to set up its svg element.
-	chart.elem = el3;
+	chart.elem = chartSvgElm;
 	chart.svgTag = d3.select(chart.elem)
 	  .append("svg")
 	    .attr("id", chart.id)
 		.attr("preserveAspectRatio", "xMinYMin meet")
-		.attr("viewBox", "0 0 "+checkup.CHART_WIDTH+" "+checkup.CHART_HEIGHT);
+		.attr("viewBox", "0 0 " + checkup.CHART_WIDTH + " " + checkup.CHART_HEIGHT);
 
-	chart.margin = {top: 20, right: 20, bottom: 40, left: 75};
+	chart.margin = {top: 20, right: 20, bottom: 40, left: 55};
 	chart.width = checkup.CHART_WIDTH - chart.margin.left - chart.margin.right;
 	chart.height = checkup.CHART_HEIGHT - chart.margin.top - chart.margin.bottom;
 
@@ -424,72 +476,67 @@ function renderChart(chart) {
 		.range([chart.height, 0]);
 
 	chart.line = d3.svg.line()
-		.x(function(d) { return chart.xScale(d.timestamp); })
-		.y(function(d) { return chart.yScale(d.rtt); })
-		.interpolate("step-after"); // linear, monotone, or basis
-
+		.x(d => chart.xScale(d.timestamp))
+		.y(d => chart.yScale(d.rtt))
+		.interpolate("linear"); // linear, monotone, or basis
 
 	chart.lineGroup = chart.svg
 	  .append("g")
-		.attr("class", "lines");
+		.attr("class", "lines")
 
-	var focus = chart.svg
+	// Focus Markers
+	let focus = chart.svg
 	  .append("g")
 		.attr("class", "focus")
 		.style("display", "none");
 
 	focus.append("circle")
-		.attr("r", 6);
+		.attr("r", 3);
 
-	var text = focus.append("text")
+	// Focus Text
+	let textRtt = focus.append("text")
 		.attr("x", 9)
 		.attr("dy", ".35em")
-		.attr("class", "focus-text");
-
-
+		.attr("class", "focus-text rtt");
+	let textTs = focus.append("text")
+		.attr("x", 9)
+		.attr("dy", ".35em")
+		.attr("class", "focus-text ts");
+	
 	// Next we build an overlay to cover the data area,
 	// so when the mouse hovers it we can show the point.
-	var bisectDate = d3.bisector(function(d) { return d.timestamp; }).left;
+	let bisectDate = d3.bisector(d => d.timestamp).left;
 	var overlay;
-	var mousemove = function() {
-		var x0 = chart.xScale.invert(d3.mouse(this)[0]),
-			i = bisectDate(chart.series.med, x0, 1),
-			d0 = chart.series.med[i - 1],
-			d1 = chart.series.med[i],
-			d = (d0 && d1) ? (x0 - d0.timestamp > d1.timestamp - x0 ? d1 : d0) : (d0 || d1);
-		var xloc = chart.xScale(d.timestamp);
-		focus.attr("transform", "translate(" + xloc + "," + chart.yScale(d.rtt) + ")");
-		if (xloc > overlay.width.animVal.value - 50)
-			text.attr("transform", "translate(-60, 10)");
-		else
-			text.attr("transform", "translate(0, 10)");
-		focus.select("text").text(checkup.formatDuration(d.rtt));
-	};
 	chart.svg.append("rect")
 		.attr("class", "overlay")
 		.attr("width", chart.width)
 		.attr("height", chart.height)
-		.on("mouseover", function() { focus.style("display", null); })
-		.on("mouseout", function() { focus.style("display", "none"); })
-		.on("mousemove", mousemove);
-	overlay = document.querySelector("#"+chart.id+" .overlay");
+		.on('mouseout', () => focus.style('display', 'none'))
+		.on('mousemove', function () { // need closure to chart and overlay
+			let x0 = chart.xScale.invert(d3.mouse(this)[0]);
+			let dateMid = bisectDate(chart.series.med, x0, 1);
+			let dataLeft = chart.series.med[dateMid - 1];
+			let dataRight = chart.series.med[dateMid];
+			let data = (dataLeft && dataRight) 
+				? (x0 - dataLeft.timestamp > dataRight.timestamp - x0 ? dataRight : dataLeft) 
+				: (dataLeft || dataRight);
+			let xloc = chart.xScale(data.timestamp);			
+			if (xloc > overlay.width.animVal.value - 50){
+				textRtt.attr("transform", "translate(-60, 10)");
+				textTs.attr("transform", "translate(-60, 23)");
+			} else {
+				textRtt.attr("transform", "translate(0, 10)");
+				textTs.attr("transform", "translate(0, 23)");
+			}
+			focus
+				.attr("transform", "translate(" + xloc + "," + chart.yScale(data.rtt) + ")")
+				.style('display', 'inline');
+			focus.select(".focus-text.rtt").text(checkup.formatDuration(data.rtt));
+			focus.select(".focus-text.ts").text(checkup.compactDateTimeString(data.timestamp));
+		})
+	overlay	= document.querySelector("#"+chart.id+" .overlay");
 
 	chart.eventGroup = chart.svg
 	  .append("g")
 		.attr("class", "events");
-}
-
-
-function highlightSameEvent() {
-	var elems = document.querySelectorAll(".event-item:not(.event-id-"+this.getAttribute("data-eventid")+")");
-	for (var i = 0; i < elems.length; i++) {
-		elems[i].style.opacity = ".25";
-	}
-}
-
-function unhighlightSameEvent() {
-	var elems = document.querySelectorAll(".event-item:not(.event-id-"+this.getAttribute("data-eventid")+")");
-	for (var i = 0; i < elems.length; i++) {
-		elems[i].style.opacity = "";
-	}
 }
