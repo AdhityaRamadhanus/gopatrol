@@ -7,6 +7,7 @@ service checkup {
 	// Add Endpoint Function
 	rpc AddHTTPEndpoint (AddHttpEndpointRequest) returns (EndpointResponse) {}
 	rpc AddTCPEndpoint (AddTcpEndpointRequest) returns (EndpointResponse) {}
+	rpc AddDNSEndpoint (AddDNSEndpointRequest) returns (EndpointResponse) {}
 	
 	// Delete Endpoint Function
 	rpc DeleteEndpoint (DeleteEndpointRequest) returns (EndpointResponse) {}
@@ -35,6 +36,12 @@ message AddTcpEndpointRequest {
 	bool tls_enabled = 2;
 	bool tls_skip_verify = 3;
 	string tls_ca_file = 4;
+	int64 timeout = 5;
+}
+
+message AddDNSEndpointRequest {
+	GenericEndpointRequest endpoint = 1;
+	string hostname = 2;
 	int64 timeout = 5;
 }
 

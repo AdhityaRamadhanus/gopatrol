@@ -90,6 +90,20 @@ var Commands = cli.Commands{
 		),
 	},
 	{
+		Name:      "add-dns",
+		Usage:     "Add dns endpoints to checkup",
+		Action:    addDNSEndpoint,
+		UsageText: "checklist add-dns [command options] name url host",
+		Flags: append(
+			append(defaultConnFlags, defaultEndpointFlags...),
+			cli.Int64Flag{
+				Name:  "timeout",
+				Value: int64(3 * time.Second),
+				Usage: "Timeout to established a tls connection",
+			},
+		),
+	},
+	{
 		Name:   "check",
 		Usage:  "list and check endpoints",
 		Action: checkEndpoint,
