@@ -8,21 +8,23 @@ import (
 	"github.com/urfave/cli"
 )
 
-func deleteEndpoint(cliContext *cli.Context) {
-	// Set up a connection to the server.
-	conn, err := createGrpcClient(cliContext)
+func deleteEndpoint(c *cli.Context) error {
+	conn, err := createGrpcClient(c)
 	if err != nil {
-		log.Println("could not connect to grpc server", err)
-		return
+		errMessage := "Couldn't connect to grpc server: " + err.Error()
+		return cli.NewExitError(errMessage, 1)
 	}
 	defer conn.Close()
-	c := checkupservice.NewCheckupClient(conn)
+	service := checkupservice.NewCheckupClient(conn)
 
-	r, err := c.DeleteEndpoint(context.Background(), &checkupservice.InquiryEndpointRequest{Name: cliContext.String("name")})
-
+	r, err := service.DeleteEndpoint(context.Background(), &checkupservice.DeleteEndpointRequest{
+		Url: c.String("url"),
+	})
 	if err != nil {
-		log.Println("failed to delete endpoint", err)
-	} else {
-		log.Println(r.Message)
+		errMessage := "Failed to delete endpoint :" + err.Error()
+		return cli.NewExitError(errMessage, 1)
 	}
+
+	log.Println(r.Message)
+	return nil
 }

@@ -8,22 +8,24 @@ import (
 	"github.com/urfave/cli"
 )
 
-func checkEndpoint(cliContext *cli.Context) {
-	conn, err := createGrpcClient(cliContext)
+func checkEndpoint(c *cli.Context) error {
+	conn, err := createGrpcClient(c)
 	if err != nil {
-		log.Println("could not connect to grpc server", err)
-		return
+		errMessage := "Couldn't connect to grpc server: " + err.Error()
+		return cli.NewExitError(errMessage, 1)
 	}
 	defer conn.Close()
-	c := checkupservice.NewCheckupClient(conn)
+	service := checkupservice.NewCheckupClient(conn)
 
-	r, err := c.ListEndpoint(context.Background(), &checkupservice.ListEndpointRequest{Check: true})
+	r, err := service.ListEndpoint(context.Background(), &checkupservice.ListEndpointRequest{Check: true})
 
 	if err != nil {
-		log.Fatalf("could not list endpoints: %v", err)
-	} else {
-		for _, endpoint := range r.Endpoints {
-			log.Println(endpoint.Name, " ", endpoint.Url, " ", endpoint.Status)
-		}
+		errMessage := "Failed to get endpoint :" + err.Error()
+		return cli.NewExitError(errMessage, 1)
 	}
+
+	for _, endpoint := range r.Endpoints {
+		log.Println(endpoint.Name, " ", endpoint.Url, " ", endpoint.Status)
+	}
+	return nil
 }
