@@ -1,6 +1,7 @@
 package checkupd
 
 import (
+	"github.com/mholt/caddy"
 	cli "github.com/urfave/cli"
 )
 
@@ -147,6 +148,28 @@ var Commands = cli.Commands{
 				Name:  "key",
 				Value: "",
 				Usage: "key file",
+			},
+		},
+	},
+	{
+		Name:   "status-page",
+		Usage:  "serve the status page",
+		Action: serveStatusPage,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "config",
+				Value: "",
+				Usage: "Caddyfile to load (default \"" + caddy.DefaultConfigFile + "\")",
+			},
+			cli.StringFlag{
+				Name:  "type",
+				Value: "http",
+				Usage: "Type of server to run",
+			},
+			cli.StringFlag{
+				Name:  "log",
+				Value: "",
+				Usage: "Log output",
 			},
 		},
 	},
