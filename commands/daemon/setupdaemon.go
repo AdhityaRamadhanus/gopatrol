@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/AdhityaRamadhanus/checkup"
+	checkup "github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/AdhityaRamadhanus/gopatrol/config"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"

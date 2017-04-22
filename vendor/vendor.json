@@ -3,12 +3,6 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "Al47X8S8R7+UXTVjTfK6SecdEdo=",
-			"path": "github.com/AdhityaRamadhanus/checkup",
-			"revision": "8d49ab058b8a20bac3b0e449789ce4ca8e82f9d4",
-			"revisionTime": "2017-03-13T14:41:33Z"
-		},
-		{
 			"checksumSHA1": "Ewcr9gadttn89K/CjCMB6u2B4vQ=",
 			"path": "github.com/aws/aws-sdk-go/aws",
 			"revision": "3d7773ac930d57ef4a59e0d10c5f65a0cfa5acd6",
