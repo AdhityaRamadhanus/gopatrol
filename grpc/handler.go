@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	checkup "github.com/AdhityaRamadhanus/checkupd"
+	checkup "github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/pkg/errors"
 )
 

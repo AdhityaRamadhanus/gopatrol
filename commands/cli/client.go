@@ -1,4 +1,4 @@
-package checklist
+package cli
 
 import (
 	"net"
@@ -18,12 +18,12 @@ func unixDialer(target string, timeout time.Duration) (net.Conn, error) {
 func createGrpcClient(cliContext *cli.Context) (*grpc.ClientConn, error) {
 	if cliContext.Bool("tls") {
 		godotenv.Load()
-		creds, _ := credentials.NewClientTLSFromFile(os.Getenv("CHECKLIST_CA"), os.Getenv("CHECKLIST_HOST"))
+		creds, _ := credentials.NewClientTLSFromFile(os.Getenv("cli_CA"), os.Getenv("cli_HOST"))
 		return grpc.Dial(cliContext.String("host"),
 			grpc.WithTransportCredentials(creds),
 		)
 	}
-	return grpc.Dial("/tmp/checkupd.sock",
+	return grpc.Dial("/tmp/gopatrol.sock",
 		grpc.WithDialer(unixDialer),
 		grpc.WithInsecure())
 }

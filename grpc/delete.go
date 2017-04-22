@@ -6,8 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
-	checkup "github.com/AdhityaRamadhanus/checkupd"
-	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
+	checkup "github.com/AdhityaRamadhanus/gopatrol"
+	checkupservice "github.com/AdhityaRamadhanus/gopatrol/grpc/service"
 )
 
 //DeleteEndpoint is grpc service to delete some endpoint

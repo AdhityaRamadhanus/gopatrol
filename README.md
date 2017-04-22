@@ -1,23 +1,23 @@
-# checkupd
+# gopatrol
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/AdhityaRamadhanus/checkupd)](https://goreportcard.com/report/github.com/AdhityaRamadhanus/checkupd)  
+[![Go Report Card](https://goreportcard.com/badge/github.com/AdhityaRamadhanus/gopatrol)](https://goreportcard.com/report/github.com/AdhityaRamadhanus/gopatrol)  
 
 self-hosted endpoint monitoring daemon and status pages based on https://github.com/sourcegraph/checkup
 
 <p>
   <a href="#installation">Installation |</a>
-  <a href="#setting-up-checkupd-with-fs">Setting FS |</a>
-    <a href="#setting-up-checkupd-with-s3">Setting S3 |</a>
+  <a href="#setting-up-gopatrol-with-fs">Setting FS |</a>
+    <a href="#setting-up-gopatrol-with-s3">Setting S3 |</a>
   <a href="#setting-endpoints">Setting Endpoints |</a>
   <a href="#notifier-slack">Notifier |</a>
   <a href="#licenses">License</a>
   <br><br>
   <blockquote>
-	Checkupd is self-hosted health checks and status pages, written in Go using checkup (instead of using them as dependency i decide to copy the file to this project) and grpc as backend.
+	gopatrol is self-hosted health checks and status pages, written in Go using checkup (instead of using them as dependency i decide to copy the file to this project) and grpc as backend.
 
   There is much work to do for this project to be complete. Use it carefully.
 
-  Checkupd currently supports:
+  gopatrol currently supports:
 
   - Checking HTTP endpoints
   - Checking TCP endpoints (TLS supported)
@@ -35,10 +35,10 @@ Installation
 * make
 ```bash
 NAME:
-   checklist - Checkup server cli 
+   gopatrol-cli - Checkup server cli 
 
 USAGE:
-   checklist [global options] command [command options] [arguments...]
+   gopatrol-cli [global options] command [command options] [arguments...]
 
 VERSION:
    1.0.0
@@ -61,10 +61,10 @@ GLOBAL OPTIONS:
 
 ```bash
 NAME:
-   checkupd - Checkupd daemon 
+   gopatrol - gopatrol daemon 
 
 USAGE:
-   checkupd [global options] command [command options] [arguments...]
+   gopatrol [global options] command [command options] [arguments...]
 
 VERSION:
    1.0.0
@@ -83,12 +83,12 @@ GLOBAL OPTIONS:
    --version, -v  print the version
 ```
 
-### Setting up checkupd with FS
+### Setting up gopatrol with FS
 All you need to do is setup configuration for daemon and status page
 
 1. **Daemon Setup**
   ```bash
-  $ checkupd setup-daemon fs --log=<logs dir, by default its ./checkup_config/logs>
+  $ gopatrol setup-daemon fs --log=<logs dir, by default its ./checkup_config/logs>
   ```
 
   It will create a directory called checkup_config and checkup_config/logs and checkup.json
@@ -105,7 +105,7 @@ All you need to do is setup configuration for daemon and status page
 
 2. **Status Page Setup**
   ```bash
-  $ checkupd setup-page fs --log=<logs dir, by default its logs> --url=<url to serve the page, with port ex: localhost:80, mycheckup.com:80>
+  $ gopatrol setup-page fs --log=<logs dir, by default its logs> --url=<url to serve the page, with port ex: localhost:80, mycheckup.com:80>
   ```
 
   It will create a directory called caddy_config and put config.js inside statuspage/js and index.html in statuspage
@@ -125,14 +125,14 @@ All you need to do is setup configuration for daemon and status page
   };
   ```
 
-### Setting up checkupd with S3
-First you need S3 bucket for this and setting privileges for this bucket, unfortunately checkupd doesn't support automatic provisioning like checkup so you have to do manual provision https://github.com/sourcegraph/checkup/wiki/Provisioning-S3-Manually
+### Setting up gopatrol with S3
+First you need S3 bucket for this and setting privileges for this bucket, unfortunately gopatrol doesn't support automatic provisioning like checkup so you have to do manual provision https://github.com/sourcegraph/checkup/wiki/Provisioning-S3-Manually
 
 Then, just like with the FS, you need to setup configuration for daemon and status page
 
 1. **Daemon Setup**
   ```bash
-  $ checkupd setup-daemon s3 --i=<s3 AccessKeyID> --k=<s3 SecretKey> --r=<s3 Region> --b=<s3 Bucket Name>
+  $ gopatrol setup-daemon s3 --i=<s3 AccessKeyID> --k=<s3 SecretKey> --r=<s3 Region> --b=<s3 Bucket Name>
   ```
 
   It will create a directory called caddy_config and put config.js inside statuspage/js and index.html in statuspage
@@ -152,7 +152,7 @@ Then, just like with the FS, you need to setup configuration for daemon and stat
   
 2. **Status Page Setup**
   ```bash
-  $ checkupd setup-daemon s3 --i=<s3 AccessKeyID> --k=<s3 SecretKey> --r=<s3 Region> --b=<s3 Bucket Name> --url=<url to serve the page, with port ex: localhost:80, mycheckup.com:80>
+  $ gopatrol setup-daemon s3 --i=<s3 AccessKeyID> --k=<s3 SecretKey> --r=<s3 Region> --b=<s3 Bucket Name> --url=<url to serve the page, with port ex: localhost:80, mycheckup.com:80>
   ```
 
   It will create a directory called checkup_config and checkup_config/logs and checkup.json
@@ -178,7 +178,7 @@ Then, just like with the FS, you need to setup configuration for daemon and stat
 Running Daemon
 ---------------
 ```bash
-$ checkupd daemon
+$ gopatrol daemon
 ```
 
 Serve Status Page
@@ -190,7 +190,7 @@ docker-compose up
 
 Setting Endpoints
 ----------------
-You can manually add endpoints to the generated checkup.json (see Setting up checkupd with FS or S3)
+You can manually add endpoints to the generated checkup.json (see Setting up gopatrol with FS or S3)
 
 Example of such configuration
 
@@ -255,14 +255,14 @@ Or you can add them on the fly when the daemon run
 1. Adding Tcp endpoint
 ```bash
 NAME:
-   checklist add-tcp - Add tcp endpoints to checkup
+   gopatrol-cli add-tcp - Add tcp endpoints to checkup
 
 USAGE:
-   checklist add-tcp [command options] name url
+   gopatrol-cli add-tcp [command options] name url
 
 OPTIONS:
    --tls                              Send request over tls
-   --host value                       grpc server address (default: "/tmp/checkupd.sock")
+   --host value                       grpc server address (default: "/tmp/gopatrol.sock")
    --attempts value, -a value         how many times to check endpoint (default: 5)
    --thresholdrtt value, --rtt value  Threshold Rtt to define a degraded endpoint (default: 0)
    --tls-enabled                      Enable TLS connection to endpoint
@@ -274,14 +274,14 @@ OPTIONS:
 2. Adding Http endpoint
 ```bash
 NAME:
-   checklist add-http - Add endpoints to checkup
+   gopatrol-cli add-http - Add endpoints to checkup
 
 USAGE:
-   checklist add-http [command options] name url
+   gopatrol-cli add-http [command options] name url
 
 OPTIONS:
    --tls                              Send request over tls
-   --host value                       grpc server address (default: "/tmp/checkupd.sock")
+   --host value                       grpc server address (default: "/tmp/gopatrol.sock")
    --attempts value, -a value         how many times to check endpoint (default: 5)
    --thresholdrtt value, --rtt value  Threshold Rtt to define a degraded endpoint (default: 0)
    --mustcontain value                HTML content that a page should contain to determine whether a page is up or down
@@ -294,14 +294,14 @@ OPTIONS:
 3. Adding DNS endpoint
 ```bash
 NAME:
-   checklist add-dns - Add dns endpoints to checkup
+   gopatrol-cli add-dns - Add dns endpoints to checkup
 
 USAGE:
-   checklist add-dns [command options] name url hostname
+   gopatrol-cli add-dns [command options] name url hostname
 
 OPTIONS:
    --tls                              Send request over tls
-   --host value                       grpc server address (default: "/tmp/checkupd.sock")
+   --host value                       grpc server address (default: "/tmp/gopatrol.sock")
    --attempts value, -a value         how many times to check endpoint (default: 5)
    --thresholdrtt value, --rtt value  Threshold Rtt to define a degraded endpoint (default: 0)
    --timeout value                    Timeout to established a tls connection (default: 3000000000)
@@ -312,42 +312,42 @@ Just like adding endpoint, you can either modify the checkup.json or delete them
 1. Deleting Endpoint
 ```bash
 NAME:
-   checklist delete - delete endpoint
+   gopatrol-cli delete - delete endpoint
 
 USAGE:
-   checklist delete [command options] url
+   gopatrol-cli delete [command options] url
 
 OPTIONS:
    --tls         Send request over tls
-   --host value  grpc server address (default: "/tmp/checkupd.sock")
+   --host value  grpc server address (default: "/tmp/gopatrol.sock")
 ```
 
 List Endpoint
 ------------------------
 ```bash
 NAME:
-   checklist list - list endpoint
+   gopatrol-cli list - list endpoint
 
 USAGE:
-   checklist list [command options] [arguments...]
+   gopatrol-cli list [command options] [arguments...]
 
 OPTIONS:
    --tls         Send request over tls
-   --host value  grpc server address (default: "/tmp/checkupd.sock")
+   --host value  grpc server address (default: "/tmp/gopatrol.sock")
 ```
 
 Check Endpoint
 ------------------------
 ```bash
 NAME:
-   checklist check - list and check endpoints
+   gopatrol-cli check - list and check endpoints
 
 USAGE:
-   checklist check [command options] [arguments...]
+   gopatrol-cli check [command options] [arguments...]
 
 OPTIONS:
    --tls         Send request over tls
-   --host value  grpc server address (default: "/tmp/checkupd.sock")
+   --host value  grpc server address (default: "/tmp/gopatrol.sock")
 ```
 
 Notifier (Slack)

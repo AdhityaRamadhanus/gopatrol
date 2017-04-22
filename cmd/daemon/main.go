@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	commands "github.com/AdhityaRamadhanus/checkupd/commands/checkupd"
-	"github.com/AdhityaRamadhanus/checkupd/config"
+	commands "github.com/AdhityaRamadhanus/gopatrol/commands/daemon"
+	"github.com/AdhityaRamadhanus/gopatrol/config"
 	"github.com/urfave/cli"
 )
 
@@ -24,13 +24,13 @@ func main() {
 	// Init Config
 	config.SetDefaultConfig()
 	app := cli.NewApp()
-	app.Name = "checkupd"
+	app.Name = "gopatrol"
 	app.Author = "Adhitya Ramadhanus"
 	app.Email = "adhitya.ramadhanus@gmail.com"
 
 	app.Commands = commands.Commands
 	app.CommandNotFound = cmdNotFound // Inspired by docker machine
-	app.Usage = "Checkupd daemon "
+	app.Usage = "gopatrol daemon "
 	app.Version = "1.0.0"
 
 	if err := app.Run(os.Args); err != nil {

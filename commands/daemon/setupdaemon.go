@@ -1,11 +1,11 @@
-package checkupd
+package daemon
 
 import (
 	"log"
 	"os"
 
 	"github.com/AdhityaRamadhanus/checkup"
-	"github.com/AdhityaRamadhanus/checkupd/config"
+	"github.com/AdhityaRamadhanus/gopatrol/config"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )

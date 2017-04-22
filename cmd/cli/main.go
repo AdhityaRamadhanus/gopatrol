@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	commands "github.com/AdhityaRamadhanus/checkupd/commands/checklist"
-	"github.com/AdhityaRamadhanus/checkupd/config"
+	commands "github.com/AdhityaRamadhanus/gopatrol/commands/cli"
+	"github.com/AdhityaRamadhanus/gopatrol/config"
 	"github.com/urfave/cli"
 )
 

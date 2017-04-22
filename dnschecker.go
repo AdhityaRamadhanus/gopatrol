@@ -1,4 +1,4 @@
-package checkupd
+package gopatrol
 
 import (
 	"fmt"

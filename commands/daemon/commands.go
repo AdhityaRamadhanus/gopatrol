@@ -1,4 +1,4 @@
-package checkupd
+package daemon
 
 import (
 	cli "github.com/urfave/cli"
@@ -118,7 +118,7 @@ var Commands = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "address",
-				Value: "/tmp/checkupd.sock",
+				Value: "/tmp/gopatrol.sock",
 				Usage: "address of the daemon",
 			},
 		},
