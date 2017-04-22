@@ -1,4 +1,4 @@
-package checklist
+package cli
 
 import (
 	"time"
@@ -13,7 +13,7 @@ var defaultConnFlags = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:  "host",
-		Value: "/tmp/checkupd.sock",
+		Value: "/tmp/gopatrol.sock",
 		Usage: "grpc server address",
 	},
 }

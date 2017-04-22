@@ -1,4 +1,4 @@
-package checkupd
+package daemon
 
 import (
 	"log"
@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	checkupgrpc "github.com/AdhityaRamadhanus/checkupd/grpc"
-	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
+	checkupgrpc "github.com/AdhityaRamadhanus/gopatrol/grpc"
+	checkupservice "github.com/AdhityaRamadhanus/gopatrol/grpc/service"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

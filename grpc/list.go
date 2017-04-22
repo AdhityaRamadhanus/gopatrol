@@ -5,7 +5,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
+	checkupservice "github.com/AdhityaRamadhanus/gopatrol/grpc/service"
 )
 
 //ListEndpoint is grpc service that returns all the endpoints in checkup server

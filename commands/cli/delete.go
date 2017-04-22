@@ -1,11 +1,11 @@
-package checklist
+package cli
 
 import (
 	"context"
 	"fmt"
 	"log"
 
-	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
+	checkupservice "github.com/AdhityaRamadhanus/gopatrol/grpc/service"
 	"github.com/urfave/cli"
 )
 

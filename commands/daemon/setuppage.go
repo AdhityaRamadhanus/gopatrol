@@ -1,12 +1,12 @@
-package checkupd
+package daemon
 
 import (
 	"html/template"
 	"log"
 	"os"
 
-	"github.com/AdhityaRamadhanus/checkupd/config"
-	"github.com/AdhityaRamadhanus/checkupd/templates"
+	"github.com/AdhityaRamadhanus/gopatrol/config"
+	"github.com/AdhityaRamadhanus/gopatrol/templates"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )

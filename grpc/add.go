@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	checkup "github.com/AdhityaRamadhanus/checkupd"
-	checkupservice "github.com/AdhityaRamadhanus/checkupd/grpc/service"
+	checkup "github.com/AdhityaRamadhanus/gopatrol"
+	checkupservice "github.com/AdhityaRamadhanus/gopatrol/grpc/service"
 	"golang.org/x/net/context"
 )
 
