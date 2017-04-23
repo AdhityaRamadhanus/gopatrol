@@ -33,6 +33,15 @@ Caddyfile
 caddy_config/
 checkup_config/
 out/
+statuspage/
 
-statuspage/js/config.js
-statuspage/index.html
+templates/checkupjs.go
+templates/css.go
+templates/fsjs.go
+templates/html.go
+templates/imagesgray.go
+templates/imagesgreen.go
+templates/imagesred.go
+templates/imagesyellow.go
+templates/s3js.go
+templates/statuspagejs.go

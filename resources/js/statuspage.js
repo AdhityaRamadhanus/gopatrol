@@ -8,7 +8,6 @@ checkup.storage.setup(checkup.config.storage);
 document.addEventListener('DOMContentLoaded', function () {
 	checkup.domReady = true;
 
-	checkup.dom.favicon = document.getElementById("favicon");
 	checkup.dom.status = document.getElementById("overall-status");
 	checkup.dom.statustext = document.getElementsByClassName("overall-status-text")[0];
 	checkup.dom.lastcheck = document.getElementById("info-lastcheck");
@@ -158,16 +157,21 @@ function allCheckFilesLoaded (numChecksLoaded, numResultsLoaded) {
 	for (var i = 0; i < newEvents.length; i++) {
 		var e = newEvents[i];
 
-		// Save this event to the chart's event series so it will render on the graph
-		var imgFile = "ok.png"; 
+		// var colorEvents = "green";
+		// if (e.status == "down") { 
+		// 	colorEvents = "red";
+		// } else if (e.status == "degraded") { 
+		// 	colorEvents = "yellow";
+		// }		
+		var imgFile = "status-green.png"; 
 		var imgWidth = 10;
 		var imgHeight = 10; // the different icons look smaller/larger because of their shape
 		if (e.status == "down") { 
-			imgFile = "incident.png"; 
+			imgFile = "status-red.png"; 
 			imgWidth = 10; 
 			imgHeight = 10; 
 		} else if (e.status == "degraded") { 
-			imgFile = "degraded.png"; 
+			imgFile = "status-yellow.png"; 
 			imgWidth = 10; 
 			imgHeight = 10;
 		}
@@ -214,19 +218,15 @@ function allCheckFilesLoaded (numChecksLoaded, numResultsLoaded) {
 	}
 
 	if (overall == "healthy") {
-		checkup.dom.favicon.href = "images/status-green.png";
 		checkup.dom.status.className = "green";
 		checkup.dom.statustext.innerHTML = checkup.config.status_text.healthy || "System Nominal";
 	} else if (overall == "degraded") {
-		checkup.dom.favicon.href = "images/status-yellow.png";
 		checkup.dom.status.className = "yellow";
 		checkup.dom.statustext.innerHTML = checkup.config.status_text.degraded || "Sub-Optimal";
 	} else if (overall == "down") {
-		checkup.dom.favicon.href = "images/status-red.png";
 		checkup.dom.status.className = "red";
 		checkup.dom.statustext.innerHTML = checkup.config.status_text.down || "Outage";
 	} else {
-		checkup.dom.favicon.href = "images/status-gray.png";
 		checkup.dom.status.className = "gray";
 		checkup.dom.statustext.innerHTML = checkup.config.status_text.unknown || "Status Unknown";
 	}
