@@ -1,4 +1,4 @@
-.PHONY: default clean
+.PHONY: default clean_build clean_bin build_grpc build_grpc build_gopatrol build_gopatrol-cli
 
 CLI_NAME = gopatrol-cli
 DAEMON_NAME = gopatrol
@@ -11,12 +11,8 @@ PROTOC_BIN=~/protoc/bin/protoc
 
 # target #
 
-default: clean build_gopatrol build_gopatrol-cli
-
-build_grpc:
-	$(PROTOC_BIN) -I service/ --go_out=plugins=grpc:service grpc/service/service.proto
-
-build_docker: 
+default: clean_build compile_bin2go generate_go clean_bin build_gopatrol build_gopatrol-cli clean_bin
+build_grpc: 
 	docker build --tag gopatrol:v${VERSION} .
 
 build_gopatrol: 
@@ -49,8 +45,27 @@ ifeq ($(OS) ,Darwin)
 endif
 	@echo "Succesfully Build for ${OS} version:= ${VERSION}"
 
-clean:
-	rm -rf build/*
+compile_bin2go: ext/bin2go.go
+	@echo "Compiling bin2go"
+	go build -ldflags "-s -w" -o bin2go ext/bin2go.go
+
+generate_go: resources/* 
+	./bin2go -in=resources/js/checkup.js -out=templates/checkupjs.go -pkg=templates CheckupJS
+	./bin2go -in=resources/js/fs.js -out=templates/fsjs.go -pkg=templates FSJS
+	./bin2go -in=resources/js/s3.js -out=templates/s3js.go -pkg=templates S3JS
+	./bin2go -in=resources/js/statuspage.js -out=templates/statuspagejs.go -pkg=templates StatusPageJS
+	./bin2go -in=resources/css/style.css -out=templates/css.go -pkg=templates StyleCSS
+	./bin2go -in=resources/index.html -out=templates/html.go -pkg=templates IndexHTML
+	./bin2go -in=resources/images/status-gray.png -out=templates/imagesgray.go -pkg=templates StatusGrayPNG
+	./bin2go -in=resources/images/status-red.png -out=templates/imagesred.go -pkg=templates StatusRedPNG
+	./bin2go -in=resources/images/status-yellow.png -out=templates/imagesyellow.go -pkg=templates StatusYellowPNG
+	./bin2go -in=resources/images/status-green.png -out=templates/imagesgreen.go -pkg=templates StatusGreenPNG
+
+clean_bin:
+	- rm bin2go
+
+clean_build:
+	- rm -rf build/*
 
 reset_setup:
 	- rm -rf checkup_config

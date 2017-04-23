@@ -8,7 +8,6 @@ services:
     - "80:80"
     - "443:443"
     volumes:
-    - "./checkup_config/logs:/statuspage/logs"
     - "./statuspage:/statuspage"
     - "./caddy_config/Caddyfile:/etc/Caddyfile"
     - "./caddy_config/caddy-logs:/root/.caddy/logs"

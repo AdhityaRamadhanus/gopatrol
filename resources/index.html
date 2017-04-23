@@ -1,54 +1,18 @@
-package templates
-
-var ConfigFSJS = `checkup.config = {
-	"timeframe": 1 * time.Day,
-	"refresh_interval": 60,
-	"storage": {
-		"url": "logs"
-	},
-	"status_text": {
-		"healthy": "Situation Normal",
-		"degraded": "Degraded Service",
-		"down": "Service Disruption"
-	}
-};`
-
-var ConfigS3JS = `checkup.config = {
-	"timeframe": 1 * time.Day,
-	"refresh_interval": 60,
-	"storage": {
-		"AccessKeyID": "{{.AccessKeyID}}",
-		"SecretAccessKey": "{{.SecretAccessKey}}",
-		"Region": "{{.Region}}",
-		"BucketName": "{{.Bucket}}"
-	},
-	"status_text": {
-		"healthy": "Situation Normal",
-		"degraded": "Degraded Service",
-		"down": "Service Disruption"
-	}
-};`
-
-var IndexHTML = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>Status Page</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<script src="js/d3.v3.min.js" charset="utf-8"></script>
-		<script src="js/{{.Type}}.js"></script>
-		<script src="js/checkup.js"></script>
-		<script src="js/config.js"></script>
-		<script src="js/statuspage.js"></script>
-		<link rel="icon" href="images/favicon.png" id="favicon">
-		<link rel="stylesheet" href="css/fontello.css">
-		<link rel="stylesheet" href="css/style.css">
+		<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+		<script src="https://sdk.amazonaws.com/js/aws-sdk-2.45.0.min.js"></script>
+		<script src="js/app.min.js"></script>
+		<link rel="stylesheet" href="css/style.min.css">
 	</head>
 	<body>
 		<div class="app">
 			<header>
 				<div id="overall-status">
-					<i class="icon-stethoscope overall-status-icon"></i>
 					<span class="overall-status-text">Situation Normal</span>
 				</div>
 			</header>
@@ -92,7 +56,7 @@ var IndexHTML = `<!DOCTYPE html>
 		</main>
 
 		<footer>
-			Powered by <img src="images/checkup.png" id="checkup-logo">
+			Powered by Checkup & GoPatrol
 		</footer>
 	</body>
-</html>`
+</html>
