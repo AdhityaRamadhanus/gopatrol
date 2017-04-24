@@ -73,9 +73,11 @@ AUTHOR:
    Adhitya Ramadhanus <adhitya.ramadhanus@gmail.com>
 
 COMMANDS:
-     setup    Setup statuspage
-     daemon        run daemon
-     help, h       Shows a list of commands or help for one command
+     daemon       run daemon
+     tls-daemon   run tls daemon
+     setup        Setup Daemon and create status page
+     status-page  Serve status page
+     help, h      Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --help, -h     show help
@@ -195,13 +197,13 @@ It will create three directories called caddy_config, checkup_config and statusp
 Running Daemon
 ---------------
 ```bash
-$ gopatrol daemon
+$ gopatrol daemon 10s
 ```
 
 Serve Status Page
 ---------------
 ```bash
-docker-compose up
+$ gopatrol status-page --config=<Path to caddyfile, default to caddy_config/Caddyfile> 
 ```
 ![checkup](https://cloud.githubusercontent.com/assets/5761975/25096466/888ca154-23ca-11e7-910d-59be4c610989.png)
 
