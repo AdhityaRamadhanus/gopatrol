@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
+
 	checkupgrpc "github.com/AdhityaRamadhanus/gopatrol/grpc"
 	checkupservice "github.com/AdhityaRamadhanus/gopatrol/grpc/service"
 	"github.com/urfave/cli"
@@ -27,6 +29,22 @@ func runTLSDaemon(cliContext *cli.Context) {
 		log.Println(err)
 		os.Exit(1)
 	}
+
+	// Set up process log before anything bad happens
+	switch cliContext.String("log") {
+	case "stdout":
+		log.SetOutput(os.Stdout)
+	case "stderr":
+		log.SetOutput(os.Stderr)
+	default:
+		log.SetOutput(&lumberjack.Logger{
+			Filename:   cliContext.String("log"),
+			MaxSize:    100,
+			MaxAge:     14,
+			MaxBackups: 10,
+		})
+	}
+
 	// Set Check Interval
 	interval, _ := time.ParseDuration(intervalRaw)
 	serviceHandler.CheckInterval = interval
@@ -82,6 +100,20 @@ func runDaemon(cliContext *cli.Context) {
 		log.Println(err)
 		os.Exit(1)
 	}
+	switch cliContext.String("log") {
+	case "stdout":
+		log.SetOutput(os.Stdout)
+	case "stderr":
+		log.SetOutput(os.Stderr)
+	default:
+		log.SetOutput(&lumberjack.Logger{
+			Filename:   cliContext.String("log"),
+			MaxSize:    100,
+			MaxAge:     14,
+			MaxBackups: 10,
+		})
+	}
+
 	// Set Check Interval
 	interval, _ := time.ParseDuration(intervalRaw)
 

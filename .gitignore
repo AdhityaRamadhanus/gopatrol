@@ -35,6 +35,8 @@ checkup_config/
 out/
 statuspage/
 
+*.log
+
 templates/checkupjs.go
 templates/css.go
 templates/fsjs.go
