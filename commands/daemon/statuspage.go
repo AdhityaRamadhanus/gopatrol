@@ -50,7 +50,8 @@ func serveStatusPage(c *cli.Context) error {
 	}
 
 	// Executes Startup events
-	caddy.EmitEvent(caddy.StartupEvent)
+	// caddy.
+	// caddy.EmitEvent(caddy.StartupEvent)
 
 	// Get Caddyfile input
 	caddyfileinput, err := caddy.LoadCaddyfile(c.String("type"))

@@ -11,36 +11,17 @@ import (
 
 // TCPChecker implements a Checker for TCP endpoints.
 type TCPChecker struct {
-	// Name is the name of the endpoint.
-	Name string `json:"endpoint_name"`
-
-	// URL is the URL of the endpoint.
-	URL string `json:"endpoint_url"`
-
-	// ThresholdRTT is the maximum round trip time to
-	// allow for a healthy endpoint. If non-zero and a
-	// request takes longer than ThresholdRTT, the
-	// endpoint will be considered unhealthy. Note that
-	// this duration includes any in-between network
-	// latency.
-	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
-
-	// Attempts is how many requests the client will
-	// make to the endpoint in a single check.
-	Attempts int `json:"attempts,omitempty"`
-
+	Slug string `json:"slug" valid:"required"`
+	*Endpoint
 	// TLSEnabled controls whether to enable TLS or not.
 	// If set, TLS is enabled.
 	TLSEnabled bool `json:"tls,omitempty"`
-
 	// TLSSkipVerify controls whether to skip server TLS
 	// certificat validation or not.
 	TLSSkipVerify bool `json:"tls_skip_verify,omitempty"`
-
 	// TLSCAFile is the Certificate Authority used
 	// to validate the server TLS certificate.
 	TLSCAFile string `json:"tls_ca_file,omitempty"`
-
 	// Timeout is the maximum time to wait for a
 	// TCP connection to be established.
 	Timeout time.Duration `json:"timeout,omitempty"`

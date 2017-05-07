@@ -11,24 +11,8 @@ import (
 
 // HTTPChecker implements a Checker for HTTP endpoints.
 type HTTPChecker struct {
-	// Name is the name of the endpoint.
-	Name string `json:"endpoint_name"`
-
-	// URL is the URL of the endpoint.
-	URL string `json:"endpoint_url"`
-
-	// ThresholdRTT is the maximum round trip time to
-	// allow for a healthy endpoint. If non-zero and a
-	// request takes longer than ThresholdRTT, the
-	// endpoint will be considered unhealthy. Note that
-	// this duration includes any in-between network
-	// latency.
-	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
-
-	// Attempts is how many requests the client will
-	// make to the endpoint in a single check.
-	Attempts int `json:"attempts,omitempty"`
-
+	Slug string `json:"slug" valid:"required"`
+	*Endpoint
 	// UpStatus is the HTTP status code expected by
 	// a healthy endpoint. Default is http.StatusOK.
 	UpStatus int `json:"up_status,omitempty"`
