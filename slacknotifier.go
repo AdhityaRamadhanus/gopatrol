@@ -15,7 +15,7 @@ type EndpointState struct {
 	Name       string
 	URL        string
 	LastChange int64
-	LastStatus StatusText
+	LastStatus string
 }
 
 // SlackNotifier is the main struct consist of all the sub component including slack api, real-time messaing api and face detector
@@ -110,11 +110,11 @@ func (s *SlackNotifier) Notify(results []Result) error {
 	tempState := make(map[string]EndpointState)
 
 	for _, result := range results {
-		state, ok := s.EndpointStates[result.Title]
+		state, ok := s.EndpointStates[result.Name]
 		if !ok {
 			state = EndpointState{
-				Name:       result.Title,
-				URL:        result.Endpoint,
+				Name:       result.Name,
+				URL:        result.URL,
 				LastChange: 0,
 				LastStatus: result.Status(),
 			}
@@ -122,19 +122,19 @@ func (s *SlackNotifier) Notify(results []Result) error {
 		// If the endpoint is Down
 		switch {
 		case result.Down:
-			lastResultTime := time.Unix(0, result.Timestamp)
+			lastResultTime := result.Timestamp
 			lastChangeTime := time.Unix(0, state.LastChange)
 			diffMinutes := lastResultTime.Sub(lastChangeTime).Minutes()
 			if state.LastStatus == "healthy" || (state.LastStatus == "down" && diffMinutes > 5.0) {
 				boolSend = true
 				attachment := slack.Attachment{
-					Title: result.Title + " is currently down",
-					Text:  result.Endpoint,
+					Title: result.Name + " is currently down",
+					Text:  result.URL,
 					Color: "danger",
 					Fields: []slack.AttachmentField{
 						slack.AttachmentField{
 							Title: "Last Checked",
-							Value: time.Unix(0, result.Timestamp).Format("2006-01-02-15:04:05"),
+							Value: result.Timestamp.Format("2006-01-02-15:04:05"),
 							Short: true,
 						},
 						slack.AttachmentField{
@@ -145,20 +145,20 @@ func (s *SlackNotifier) Notify(results []Result) error {
 					},
 				}
 				params.Attachments = append(params.Attachments, attachment)
-				state.LastChange = result.Timestamp
+				state.LastChange = result.Timestamp.UnixNano()
 				state.LastStatus = result.Status()
 			}
 		case result.Healthy:
 			if state.LastStatus == "down" {
 				boolSend = true
 				attachment := slack.Attachment{
-					Title: result.Title + " just got resurrected",
-					Text:  result.Endpoint,
+					Title: result.Name + " just got resurrected",
+					Text:  result.URL,
 					Color: "good",
 					Fields: []slack.AttachmentField{
 						slack.AttachmentField{
 							Title: "Last Checked",
-							Value: time.Unix(0, result.Timestamp).Format("2006-01-02-15:04:05"),
+							Value: result.Timestamp.Format("2006-01-02-15:04:05"),
 							Short: true,
 						},
 						slack.AttachmentField{
@@ -169,11 +169,11 @@ func (s *SlackNotifier) Notify(results []Result) error {
 					},
 				}
 				params.Attachments = append(params.Attachments, attachment)
-				state.LastChange = result.Timestamp
+				state.LastChange = result.Timestamp.UnixNano()
 				state.LastStatus = result.Status()
 			}
 		}
-		tempState[result.Title] = state
+		tempState[result.Name] = state
 	}
 
 	s.EndpointStates = tempState

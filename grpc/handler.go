@@ -1,41 +1,53 @@
 package grpc
 
 import (
-	"io/ioutil"
 	"log"
-	"os"
 	"sync"
 	"time"
 
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+
 	checkup "github.com/AdhityaRamadhanus/gopatrol"
-	"github.com/pkg/errors"
+	"github.com/AdhityaRamadhanus/gopatrol/mongo"
 )
 
 //ServiceHandler is a grpc server and checkup server
 type ServiceHandler struct {
-	CheckupServer *checkup.Checkup
-	globalLock    sync.RWMutex
-	ConfigPath    string
-	CheckInterval time.Duration
+	CheckupServer   *checkup.Checkup
+	globalLock      sync.RWMutex
+	CheckInterval   time.Duration
+	EndpointService *mongo.EndpointService
 }
 
 //NewServiceHandler create new ServiceHandler from a configfile (checkup.json)
-func NewServiceHandler(configFile string) (*ServiceHandler, error) {
+func NewServiceHandler(mongoSession *mgo.Session) (*ServiceHandler, error) {
 	serviceHandler := &ServiceHandler{
 		CheckupServer: &checkup.Checkup{},
-		ConfigPath:    configFile,
 	}
-	file, err := os.OpenFile(configFile, os.O_RDONLY, 777)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error loading config file")
+	serviceHandler.EndpointService = mongo.NewEndpointService(mongoSession)
+	endpoints, _ := serviceHandler.EndpointService.GetAllEndpoints(bson.M{}, 0, 10)
+	for _, endpoint := range endpoints {
+		typeEndpoint := endpoint.(bson.M)["type"]
+		switch typeEndpoint {
+		case "tcp":
+			var tcpChecker checkup.TCPChecker
+			bsonBytes, _ := bson.Marshal(endpoint)
+			bson.Unmarshal(bsonBytes, &tcpChecker)
+			serviceHandler.CheckupServer.Checkers = append(serviceHandler.CheckupServer.Checkers, tcpChecker)
+		case "http":
+			var httpChecker checkup.HTTPChecker
+			bsonBytes, _ := bson.Marshal(endpoint)
+			bson.Unmarshal(bsonBytes, &httpChecker)
+			serviceHandler.CheckupServer.Checkers = append(serviceHandler.CheckupServer.Checkers, httpChecker)
+		case "dns":
+			var dnsChecker checkup.DNSChecker
+			bsonBytes, _ := bson.Marshal(endpoint)
+			bson.Unmarshal(bsonBytes, &dnsChecker)
+			serviceHandler.CheckupServer.Checkers = append(serviceHandler.CheckupServer.Checkers, dnsChecker)
+		}
 	}
-	configBytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error reading config file")
-	}
-	if err := serviceHandler.CheckupServer.UnmarshalJSON(configBytes); err != nil {
-		return nil, errors.Wrap(err, "Error unmarshal config file")
-	}
+	serviceHandler.CheckupServer.Storage = mongo.NewLoggingService(mongoSession)
 
 	return serviceHandler, nil
 }
@@ -48,25 +60,25 @@ func (handler *ServiceHandler) Run() {
 		case <-timer: //hardcoded for now
 			// Obtain Lock, makesure no function updating the Checkers
 			handler.globalLock.RLock()
-			if err := handler.CheckupServer.CheckAndStore(); err != nil {
+			results, err := handler.CheckupServer.Check()
+			if err != nil {
 				log.Println(err)
+			} else {
+				if err := handler.CheckupServer.Storage.Store(results); err != nil {
+					log.Println(err)
+				}
+
+				for _, result := range results {
+					var updateData = bson.M{
+						"$set": bson.M{
+							"last_checked": result.Timestamp,
+							"last_status":  result.Status(),
+						},
+					}
+					handler.EndpointService.UpdateEndpointBySlug(result.Slug, updateData)
+				}
 			}
 			handler.globalLock.RUnlock()
 		}
 	}
-}
-
-// SerializeJSON is a function that save current checkup config to checkup.json in current working dir
-func (handler *ServiceHandler) SerializeJSON() error {
-	jsonBytes, err := handler.CheckupServer.MarshalJSON()
-	if err != nil {
-		return err
-	}
-	file, err := os.OpenFile(handler.ConfigPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
-	defer file.Close()
-	if err != nil {
-		return errors.Wrap(err, "Failed opening file")
-	}
-	_, err = file.Write(jsonBytes)
-	return errors.Wrap(err, "Failed to write json")
 }

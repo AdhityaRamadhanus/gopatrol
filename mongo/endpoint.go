@@ -1,7 +1,6 @@
 package mongo
 
 import (
-	"github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/AdhityaRamadhanus/gopatrol/config"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -39,11 +38,11 @@ func (p *EndpointService) InsertEndpoint(endpoint interface{}) error {
 	return EndpointColl.Insert(endpoint)
 }
 
-func (p *EndpointService) UpdateEndpointById(Id bson.ObjectId, UpdateData interface{}) error {
+func (p *EndpointService) UpdateEndpointBySlug(slug string, UpdateData interface{}) error {
 	copySession := p.session.Copy()
 	defer copySession.Close()
 	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
-	return EndpointColl.UpdateId(Id, UpdateData)
+	return EndpointColl.Update(bson.M{"slug": slug}, UpdateData)
 }
 
 func (p *EndpointService) GetAllEndpoints(query interface{}, page, size int) ([]interface{}, error) {
@@ -67,7 +66,7 @@ func (p *EndpointService) GetEndpointBySlug(slug string) (interface{}, error) {
 	defer copySession.Close()
 
 	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
-	var endpoint gopatrol.Endpoint
+	var endpoint interface{}
 	if err := EndpointColl.
 		Find(bson.M{
 			"slug": slug,
@@ -78,10 +77,10 @@ func (p *EndpointService) GetEndpointBySlug(slug string) (interface{}, error) {
 	return endpoint, nil
 }
 
-func (p *EndpointService) DeleteEndpointBySlug(slug string) error {
+func (p *EndpointService) DeleteEndpointByURL(url string) error {
 	copySession := p.session.Copy()
 	defer copySession.Close()
 
 	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
-	return EndpointColl.Remove(bson.M{"slug": slug})
+	return EndpointColl.Remove(bson.M{"url": url})
 }

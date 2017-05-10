@@ -12,7 +12,21 @@ import (
 // TCPChecker implements a Checker for TCP endpoints.
 type TCPChecker struct {
 	Slug string `json:"slug" valid:"required"`
-	*Endpoint
+	// Name is the name of the endpoint.
+	Name string `json:"name,omitempty" valid:"required"`
+	// URL is the URL of the endpoint.
+	URL  string `json:"url,omitempty" valid:"required"`
+	Type string `json:"type,omitempty" valid:"required"`
+	// ThresholdRTT is the maximum round trip time to
+	// allow for a healthy endpoint. If non-zero and a
+	// request takes longer than ThresholdRTT, the
+	// endpoint will be considered unhealthy. Note that
+	// this duration includes any in-between network
+	// latency.
+	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
+	// Attempts is how many requests the client will
+	// make to the endpoint in a single check.
+	Attempts int `json:"attempts,omitempty"`
 	// TLSEnabled controls whether to enable TLS or not.
 	// If set, TLS is enabled.
 	TLSEnabled bool `json:"tls,omitempty"`
@@ -42,7 +56,7 @@ func (c TCPChecker) Check() (Result, error) {
 		c.Attempts = 1
 	}
 
-	result := Result{Title: c.Name, Endpoint: c.URL, Timestamp: Timestamp()}
+	result := Result{Name: c.Name, URL: c.URL, Timestamp: time.Now().UTC(), Slug: c.Slug}
 	result.Times = c.doChecks()
 
 	return c.conclude(result), nil
@@ -111,6 +125,7 @@ func (c TCPChecker) conclude(result Result) Result {
 	for i := range result.Times {
 		if result.Times[i].Error != "" {
 			result.Down = true
+			result.Message = result.URL + " is down"
 			return result
 		}
 	}
@@ -126,5 +141,6 @@ func (c TCPChecker) conclude(result Result) Result {
 	}
 
 	result.Healthy = true
+	result.Message = result.URL + " is healthy"
 	return result
 }

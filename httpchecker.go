@@ -12,11 +12,24 @@ import (
 // HTTPChecker implements a Checker for HTTP endpoints.
 type HTTPChecker struct {
 	Slug string `json:"slug" valid:"required"`
-	*Endpoint
+	// Name is the name of the endpoint.
+	Name string `json:"name,omitempty" valid:"required"`
+	// URL is the URL of the endpoint.
+	URL  string `json:"url,omitempty" valid:"required"`
+	Type string `json:"type,omitempty" valid:"required"`
+	// ThresholdRTT is the maximum round trip time to
+	// allow for a healthy endpoint. If non-zero and a
+	// request takes longer than ThresholdRTT, the
+	// endpoint will be considered unhealthy. Note that
+	// this duration includes any in-between network
+	// latency.
+	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
+	// Attempts is how many requests the client will
+	// make to the endpoint in a single check.
+	Attempts int `json:"attempts,omitempty"`
 	// UpStatus is the HTTP status code expected by
 	// a healthy endpoint. Default is http.StatusOK.
 	UpStatus int `json:"up_status,omitempty"`
-
 	// MustContain is a string that the response body
 	// must contain in order to be considered up.
 	// NOTE: If set, the entire response body will
@@ -24,7 +37,6 @@ type HTTPChecker struct {
 	// lots of memory and slowing down checks if the
 	// response body is large.
 	MustContain string `json:"must_contain,omitempty"`
-
 	// MustNotContain is a string that the response
 	// body must NOT contain in order to be considered
 	// up. If both MustContain and MustNotContain are
@@ -33,12 +45,10 @@ type HTTPChecker struct {
 	// has the potential of using lots of memory and
 	// slowing down checks if the response body is large.
 	MustNotContain string `json:"must_not_contain,omitempty"`
-
 	// Client is the http.Client with which to make
 	// requests. If not set, DefaultHTTPClient is
 	// used.
 	Client *http.Client `json:"-"`
-
 	// Headers contains headers to added to the request
 	// that is sent for the check
 	Headers http.Header `json:"headers,omitempty"`
@@ -65,7 +75,7 @@ func (c HTTPChecker) Check() (Result, error) {
 		c.UpStatus = http.StatusOK
 	}
 
-	result := Result{Title: c.Name, Endpoint: c.URL, Timestamp: Timestamp()}
+	result := Result{Name: c.Name, URL: c.URL, Timestamp: time.Now().UTC(), Slug: c.Slug}
 	req, err := http.NewRequest("GET", c.URL, nil)
 	if err != nil {
 		return result, err

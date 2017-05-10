@@ -11,9 +11,22 @@ import (
 // DNSChecker implements a Checker for TCP endpoints.
 type DNSChecker struct {
 	Slug string `json:"slug" valid:"required"`
-	*Endpoint
-	// This is the fqdn of the target server to query the DNS server for.
-	Host string `json:"hostname_fqdn,omitempty"`
+	// Name is the name of the endpoint.
+	Name string `json:"name,omitempty" valid:"required"`
+	// URL is the URL of the endpoint.
+	URL  string `json:"url,omitempty" valid:"required"`
+	Type string `json:"type,omitempty" valid:"required"`
+	// ThresholdRTT is the maximum round trip time to
+	// allow for a healthy endpoint. If non-zero and a
+	// request takes longer than ThresholdRTT, the
+	// endpoint will be considered unhealthy. Note that
+	// this duration includes any in-between network
+	// latency.
+	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
+	// Attempts is how many requests the client will
+	// make to the endpoint in a single check.
+	Attempts int    `json:"attempts,omitempty"` // This is the fqdn of the target server to query the DNS server for.
+	Host     string `json:"hostname_fqdn,omitempty"`
 	// Timeout is the maximum time to wait for a
 	// TCP connection to be established.
 	Timeout time.Duration `json:"timeout,omitempty"`
@@ -34,7 +47,7 @@ func (c DNSChecker) Check() (Result, error) {
 		c.Attempts = 1
 	}
 
-	result := Result{Title: c.Name, Endpoint: c.URL, Timestamp: Timestamp()}
+	result := Result{Name: c.Name, URL: c.URL, Timestamp: time.Now().UTC(), Slug: c.Slug}
 	result.Times = c.doChecks()
 
 	return c.conclude(result), nil

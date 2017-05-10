@@ -22,6 +22,9 @@ func (handler *ServiceHandler) DeleteEndpoint(ctx context.Context, request *chec
 			break
 		}
 	}
+	if err := handler.EndpointService.DeleteEndpointByURL(request.Url); err != nil {
+		log.Println("error deleting endpoint", err)
+	}
 	message := "Cannot find endpoint to delete"
 	if deletedEndpoint != nil {
 		message = fmt.Sprintf("Endpoint %s->%s Deleted", deletedEndpoint.GetName(), deletedEndpoint.GetURL())

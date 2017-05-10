@@ -26,8 +26,8 @@ func (handler *ServiceHandler) ListEndpoint(ctx context.Context, request *checku
 				statusMessage = "Down"
 			}
 			response.Endpoints = append(response.Endpoints, &checkupservice.ListEndpointResponse_Endpoint{
-				Name:   result.Title,
-				Url:    result.Endpoint,
+				Name:   result.Name,
+				Url:    result.URL,
 				Status: statusMessage,
 			})
 		}

@@ -18,11 +18,17 @@ import (
 func (handler *ServiceHandler) AddTCPEndpoint(ctx context.Context, request *checkupservice.AddTcpEndpointRequest) (*checkupservice.EndpointResponse, error) {
 	handler.globalLock.Lock()
 	defer handler.globalLock.Unlock()
-	log.Println(request)
+	splittedStrings := []string{}
+	for _, v := range strings.Split(request.Endpoint.Name, " ") {
+		splittedStrings = append(splittedStrings, strings.ToLower(v))
+	}
+	slug := strings.Join(splittedStrings, "-")
 	tcpChecker := checkup.TCPChecker{
 		Name:          request.Endpoint.Name,
 		URL:           request.Endpoint.Url,
+		Slug:          slug,
 		ThresholdRTT:  time.Duration(request.Endpoint.Thresholdrtt),
+		Type:          "tcp",
 		Attempts:      int(request.Endpoint.Attempts),
 		TLSSkipVerify: request.TlsSkipVerify,
 		TLSEnabled:    request.TlsEnabled,
@@ -30,6 +36,9 @@ func (handler *ServiceHandler) AddTCPEndpoint(ctx context.Context, request *chec
 		Timeout:       time.Duration(request.Timeout),
 	}
 	handler.CheckupServer.Checkers = append(handler.CheckupServer.Checkers, tcpChecker)
+	if err := handler.EndpointService.InsertEndpoint(tcpChecker); err != nil {
+		log.Println("error inserting endpoint", err)
+	}
 	message := fmt.Sprintf("Tcp Endpoint %s->%s Added", tcpChecker.Name, tcpChecker.URL)
 	log.Printf(message)
 	return &checkupservice.EndpointResponse{Message: message}, nil
@@ -39,7 +48,6 @@ func (handler *ServiceHandler) AddTCPEndpoint(ctx context.Context, request *chec
 func (handler *ServiceHandler) AddHTTPEndpoint(ctx context.Context, request *checkupservice.AddHttpEndpointRequest) (*checkupservice.EndpointResponse, error) {
 	handler.globalLock.Lock()
 	defer handler.globalLock.Unlock()
-	log.Println(request)
 	httpChecker := checkup.HTTPChecker{
 		Name:           request.Endpoint.Name,
 		URL:            request.Endpoint.Url,
@@ -56,7 +64,9 @@ func (handler *ServiceHandler) AddHTTPEndpoint(ctx context.Context, request *che
 	if err == nil {
 		httpChecker.Headers = http.Header(httpHeaders)
 	}
-
+	if err := handler.EndpointService.InsertEndpoint(httpChecker); err != nil {
+		log.Println("error inserting endpoint", err)
+	}
 	handler.CheckupServer.Checkers = append(handler.CheckupServer.Checkers, httpChecker)
 	message := fmt.Sprintf("Http Endpoint %s->%s Added", httpChecker.Name, httpChecker.URL)
 	log.Printf(message)
@@ -67,7 +77,6 @@ func (handler *ServiceHandler) AddHTTPEndpoint(ctx context.Context, request *che
 func (handler *ServiceHandler) AddDNSEndpoint(ctx context.Context, request *checkupservice.AddDNSEndpointRequest) (*checkupservice.EndpointResponse, error) {
 	handler.globalLock.Lock()
 	defer handler.globalLock.Unlock()
-	log.Println(request)
 	dnsChecker := checkup.DNSChecker{
 		Name:         request.Endpoint.Name,
 		URL:          request.Endpoint.Url,
@@ -78,6 +87,9 @@ func (handler *ServiceHandler) AddDNSEndpoint(ctx context.Context, request *chec
 	}
 
 	handler.CheckupServer.Checkers = append(handler.CheckupServer.Checkers, dnsChecker)
+	if err := handler.EndpointService.InsertEndpoint(dnsChecker); err != nil {
+		log.Println("error inserting endpoint", err)
+	}
 	message := fmt.Sprintf("DNS Endpoint %s->%s %s Added", dnsChecker.Name, dnsChecker.URL, request.Hostname)
 	log.Printf(message)
 	return &checkupservice.EndpointResponse{Message: message}, nil

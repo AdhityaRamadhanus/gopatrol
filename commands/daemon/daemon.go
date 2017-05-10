@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	mgo "gopkg.in/mgo.v2"
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 
 	checkupgrpc "github.com/AdhityaRamadhanus/gopatrol/grpc"
@@ -23,7 +24,13 @@ func runTLSDaemon(cliContext *cli.Context) {
 	if cliContext.NArg() > 0 {
 		intervalRaw = cliContext.Args().Get(0)
 	}
-	serviceHandler, err := checkupgrpc.NewServiceHandler(cliContext.String("config"))
+	connectionString := "mongodb://localhost:27017/gopatrol"
+	session, err := mgo.Dial(connectionString)
+	if err != nil {
+		return
+	}
+
+	serviceHandler, err := checkupgrpc.NewServiceHandler(session)
 
 	if err != nil {
 		log.Println(err)
@@ -73,9 +80,6 @@ func runTLSDaemon(cliContext *cli.Context) {
 	go func() {
 		<-termChan
 		log.Println("Tcp Server is Shutting down")
-		if err := serviceHandler.SerializeJSON(); err != nil {
-			log.Println("Failed to save checkup.json", err)
-		}
 		tcpServer.GracefulStop()
 	}()
 
@@ -94,7 +98,17 @@ func runDaemon(cliContext *cli.Context) {
 	if cliContext.NArg() > 0 {
 		intervalRaw = cliContext.Args().Get(0)
 	}
-	serviceHandler, err := checkupgrpc.NewServiceHandler(cliContext.String("config"))
+
+	connectionString := "mongodb://localhost:27017/gopatrol"
+	session, err := mgo.Dial(connectionString)
+	defer session.Close()
+
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+
+	serviceHandler, err := checkupgrpc.NewServiceHandler(session)
 
 	if err != nil {
 		log.Println(err)
@@ -137,9 +151,6 @@ func runDaemon(cliContext *cli.Context) {
 	go func() {
 		<-termChan
 		log.Println("Tcp Server is Shutting down")
-		if err := serviceHandler.SerializeJSON(); err != nil {
-			log.Println("Failed to save checkup.json", err)
-		}
 		tcpServer.GracefulStop()
 	}()
 

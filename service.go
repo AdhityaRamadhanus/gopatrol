@@ -1,6 +1,8 @@
 package gopatrol
 
-import "time"
+import (
+	"time"
+)
 
 type EndpointService interface {
 	InsertEndpoint(endpoint interface{}) error
@@ -8,6 +10,11 @@ type EndpointService interface {
 	GetEndpointBySlug(slug string) (interface{}, error)
 	DeleteEndpointBySlug(slug string) error
 	// UpdateEndpoint(query interface{}, updateData interface{}) (interface{}, error)
+}
+
+type LoggingService interface {
+	InsertLog(result Result) error
+	GetAllLogs(query interface{}, page, size int) ([]Result, error)
 }
 
 type CacheService interface {
