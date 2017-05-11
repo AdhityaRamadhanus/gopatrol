@@ -4,8 +4,7 @@ import (
 	"log"
 	"os"
 
-	commands "github.com/AdhityaRamadhanus/gopatrol/commands/daemon"
-	"github.com/AdhityaRamadhanus/gopatrol/config"
+	commands "github.com/AdhityaRamadhanus/gopatrol/commands/server"
 	"github.com/urfave/cli"
 )
 
@@ -21,8 +20,6 @@ func cmdNotFound(c *cli.Context, command string) {
 }
 
 func main() {
-	// Init Config
-	config.SetDefaultConfig()
 	app := cli.NewApp()
 	app.Name = "gopatrol"
 	app.Author = "Adhitya Ramadhanus"

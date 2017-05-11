@@ -6,6 +6,13 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+type GetQuery struct {
+	Query      bson.M
+	Pagination bool
+	Page       int
+	Limit      int
+}
+
 type EndpointService struct {
 	session *mgo.Session
 }
@@ -45,16 +52,21 @@ func (p *EndpointService) UpdateEndpointBySlug(slug string, UpdateData interface
 	return EndpointColl.Update(bson.M{"slug": slug}, UpdateData)
 }
 
-func (p *EndpointService) GetAllEndpoints(query interface{}, page, size int) ([]interface{}, error) {
+func (p *EndpointService) GetAllEndpoints(q map[string]interface{}) ([]interface{}, error) {
 	copySession := p.session.Copy()
 	defer copySession.Close()
 
 	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
 	endpoints := []interface{}{}
-	if err := EndpointColl.
-		Find(query).
-		Skip(page * size).
-		Limit(size).
+
+	MongoQuery := EndpointColl.Find(q["query"])
+	if ok, val := q["pagination"].(bool); ok && val {
+		MongoQuery.
+			Skip(q["page"].(int) * q["limit"].(int)).
+			Limit(q["limit"].(int))
+	}
+
+	if err := MongoQuery.
 		All(&endpoints); err != nil {
 		return nil, err
 	}
@@ -77,10 +89,10 @@ func (p *EndpointService) GetEndpointBySlug(slug string) (interface{}, error) {
 	return endpoint, nil
 }
 
-func (p *EndpointService) DeleteEndpointByURL(url string) error {
+func (p *EndpointService) DeleteEndpointBySlug(slug string) error {
 	copySession := p.session.Copy()
 	defer copySession.Close()
 
 	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
-	return EndpointColl.Remove(bson.M{"url": url})
+	return EndpointColl.Remove(bson.M{"slug": slug})
 }

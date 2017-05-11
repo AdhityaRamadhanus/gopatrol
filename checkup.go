@@ -14,6 +14,7 @@ type Checker interface {
 	Check() (Result, error)
 	GetName() string
 	GetURL() string
+	GetSlug() string
 }
 
 // Storage can store results.
@@ -111,10 +112,4 @@ func (c Checkup) Check() ([]Result, error) {
 	}
 
 	return results, nil
-}
-
-// Timestamp returns the UTC Unix timestamp in
-// nanoseconds.
-func Timestamp() int64 {
-	return time.Now().UTC().UnixNano()
 }

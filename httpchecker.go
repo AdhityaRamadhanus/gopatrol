@@ -62,6 +62,10 @@ func (c HTTPChecker) GetURL() string {
 	return c.URL
 }
 
+func (c HTTPChecker) GetSlug() string {
+	return c.Slug
+}
+
 // Check performs checks using c according to its configuration.
 // An error is only returned if there is a configuration error.
 func (c HTTPChecker) Check() (Result, error) {

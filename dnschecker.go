@@ -40,6 +40,10 @@ func (c DNSChecker) GetURL() string {
 	return c.URL
 }
 
+func (c DNSChecker) GetSlug() string {
+	return c.Slug
+}
+
 // Check performs checks using c according to its configuration.
 // An error is only returned if there is a configuration error.
 func (c DNSChecker) Check() (Result, error) {

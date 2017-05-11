@@ -49,6 +49,10 @@ func (c TCPChecker) GetURL() string {
 	return c.URL
 }
 
+func (c TCPChecker) GetSlug() string {
+	return c.Slug
+}
+
 // Check performs checks using c according to its configuration.
 // An error is only returned if there is a configuration error.
 func (c TCPChecker) Check() (Result, error) {
