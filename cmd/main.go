@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	commands "github.com/AdhityaRamadhanus/gopatrol/commands/server"
+	commands "github.com/AdhityaRamadhanus/gopatrol/commands"
 	"github.com/urfave/cli"
 )
 
