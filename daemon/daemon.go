@@ -67,32 +67,73 @@ func NewDaemon(mongoSession *mgo.Session) (*Daemon, error) {
 }
 
 //Run the main loop for checkup to check endpoints and should be run as a goroutine
-func (handler *Daemon) Run() {
+func (d *Daemon) Run() {
 	for {
-		timer := time.After(handler.CheckInterval)
+		timer := time.After(d.CheckInterval)
 		select {
 		case <-timer: //hardcoded for now
 			// Obtain Lock, makesure no function updating the Checkers
-			handler.globalLock.RLock()
-			results, err := handler.Checkup.Check()
+			d.globalLock.RLock()
+			results, err := d.Check()
 			if err != nil {
 				log.WithError(err).Error(ErrFailedToDoCheck)
 			} else {
-				if err := handler.Checkup.Storage.Store(results); err != nil {
+				if err := d.Storage.Store(results); err != nil {
 					log.WithError(err).Error(ErrFailedToStoreResult)
 				}
-
-				for _, result := range results {
-					var updateData = bson.M{
-						"$set": bson.M{
-							"last_checked": result.Timestamp,
-							"last_status":  result.Status(),
-						},
-					}
-					handler.EndpointService.UpdateEndpointBySlug(result.Slug, updateData)
+				if err := d.CheckEventsAndSync(results); err != nil {
+					log.WithError(err).Error(ErrFailedToStoreResult)
 				}
 			}
-			handler.globalLock.RUnlock()
+			d.globalLock.RUnlock()
 		}
 	}
+}
+
+func (d *Daemon) CheckEventsAndSync(results []checkup.Result) error {
+	var events []checkup.Event
+	var err error
+	for _, result := range results {
+		var c checkup.Checker
+		for _, checker := range d.Checkers {
+			if checker.GetSlug() == result.Slug {
+				c = checker
+			}
+		}
+
+		switch {
+		case result.Down:
+			if c.GetLastStatus() == "healthy" {
+				events = append(events, checkup.Event{
+					Message:   c.GetURL() + " is down",
+					Type:      "down",
+					URL:       c.GetURL(),
+					Slug:      c.GetSlug(),
+					Timestamp: result.Timestamp,
+				})
+			}
+		case result.Healthy:
+			if c.GetLastStatus() == "down" {
+				events = append(events, checkup.Event{
+					Message:   c.GetURL() + " is up",
+					Type:      "up",
+					URL:       c.GetURL(),
+					Slug:      c.GetSlug(),
+					Timestamp: result.Timestamp,
+				})
+			}
+		}
+
+		// Update Status in MONGODB to sync with the memoery
+
+		var updateData = bson.M{
+			"$set": bson.M{
+				"last_checked": result.Timestamp,
+				"last_status":  result.Status(),
+			},
+		}
+		err = d.EndpointService.UpdateEndpointBySlug(result.Slug, updateData)
+	}
+
+	return err
 }

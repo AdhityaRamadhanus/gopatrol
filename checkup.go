@@ -15,6 +15,8 @@ type Checker interface {
 	GetName() string
 	GetURL() string
 	GetSlug() string
+	GetLastChecked() time.Time
+	GetLastStatus() string
 }
 
 // Storage can store results.

@@ -29,7 +29,9 @@ type DNSChecker struct {
 	Host     string `json:"hostname_fqdn,omitempty"`
 	// Timeout is the maximum time to wait for a
 	// TCP connection to be established.
-	Timeout time.Duration `json:"timeout,omitempty"`
+	Timeout     time.Duration `json:"timeout,omitempty"`
+	LastChecked time.Time     `json:"last_checked"`
+	LastStatus  string        `json:"last_status"`
 }
 
 func (c DNSChecker) GetName() string {
@@ -42,6 +44,14 @@ func (c DNSChecker) GetURL() string {
 
 func (c DNSChecker) GetSlug() string {
 	return c.Slug
+}
+
+func (c DNSChecker) GetLastChecked() time.Time {
+	return c.LastChecked
+}
+
+func (c DNSChecker) GetLastStatus() string {
+	return c.LastStatus
 }
 
 // Check performs checks using c according to its configuration.

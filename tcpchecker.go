@@ -38,7 +38,9 @@ type TCPChecker struct {
 	TLSCAFile string `json:"tls_ca_file,omitempty"`
 	// Timeout is the maximum time to wait for a
 	// TCP connection to be established.
-	Timeout time.Duration `json:"timeout,omitempty"`
+	Timeout     time.Duration `json:"timeout,omitempty"`
+	LastChecked time.Time     `json:"last_checked"`
+	LastStatus  string        `json:"last_status"`
 }
 
 func (c TCPChecker) GetName() string {
@@ -51,6 +53,14 @@ func (c TCPChecker) GetURL() string {
 
 func (c TCPChecker) GetSlug() string {
 	return c.Slug
+}
+
+func (c TCPChecker) GetLastChecked() time.Time {
+	return c.LastChecked
+}
+
+func (c TCPChecker) GetLastStatus() string {
+	return c.LastStatus
 }
 
 // Check performs checks using c according to its configuration.

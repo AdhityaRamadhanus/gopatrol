@@ -52,6 +52,9 @@ type HTTPChecker struct {
 	// Headers contains headers to added to the request
 	// that is sent for the check
 	Headers http.Header `json:"headers,omitempty"`
+
+	LastChecked time.Time `json:"last_checked"`
+	LastStatus  string    `json:"last_status"`
 }
 
 func (c HTTPChecker) GetName() string {
@@ -64,6 +67,14 @@ func (c HTTPChecker) GetURL() string {
 
 func (c HTTPChecker) GetSlug() string {
 	return c.Slug
+}
+
+func (c HTTPChecker) GetLastChecked() time.Time {
+	return c.LastChecked
+}
+
+func (c HTTPChecker) GetLastStatus() string {
+	return c.LastStatus
 }
 
 // Check performs checks using c according to its configuration.
@@ -94,6 +105,32 @@ func (c HTTPChecker) Check() (Result, error) {
 	result.Times = c.doChecks(req)
 
 	return c.conclude(result), nil
+}
+
+func (c *HTTPChecker) CheckEvents(result Result) *Event {
+	switch {
+	case result.Down:
+		if c.LastStatus == "healthy" {
+			return &Event{
+				Message:   c.GetURL() + " is down",
+				Type:      "down",
+				URL:       c.GetURL(),
+				Slug:      c.GetSlug(),
+				Timestamp: result.Timestamp,
+			}
+		}
+	case result.Healthy:
+		if c.LastStatus == "down" {
+			return &Event{
+				Message:   c.GetURL() + " is up",
+				Type:      "up",
+				URL:       c.GetURL(),
+				Slug:      c.GetSlug(),
+				Timestamp: result.Timestamp,
+			}
+		}
+	}
+	return nil
 }
 
 // doChecks executes req using c.Client and returns each attempt.
