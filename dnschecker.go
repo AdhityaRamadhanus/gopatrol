@@ -60,11 +60,12 @@ func (c DNSChecker) Check() (Result, error) {
 	if c.Attempts < 1 {
 		c.Attempts = 1
 	}
-
 	result := Result{Name: c.Name, URL: c.URL, Timestamp: time.Now().UTC(), Slug: c.Slug}
 	result.Times = c.doChecks()
-
-	return c.conclude(result), nil
+	result = c.conclude(result)
+	c.LastChecked = result.Timestamp
+	c.LastStatus = result.Status()
+	return result, nil
 }
 
 // doChecks executes and returns each attempt.
@@ -116,7 +117,7 @@ func (c DNSChecker) doChecks() Attempts {
 // computes remaining values needed to fill out the result.
 // It detects degraded (high-latency) responses and makes
 // the conclusion about the result's status.
-func (c DNSChecker) conclude(result Result) Result {
+func (c *DNSChecker) conclude(result Result) Result {
 	result.ThresholdRTT = c.ThresholdRTT
 
 	// Check errors (down)
@@ -138,5 +139,7 @@ func (c DNSChecker) conclude(result Result) Result {
 	}
 
 	result.Healthy = true
+	c.LastChecked = result.Timestamp
+	c.LastStatus = result.Status()
 	return result
 }

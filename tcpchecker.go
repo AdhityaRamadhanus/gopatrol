@@ -73,7 +73,9 @@ func (c TCPChecker) Check() (Result, error) {
 	result := Result{Name: c.Name, URL: c.URL, Timestamp: time.Now().UTC(), Slug: c.Slug}
 	result.Times = c.doChecks()
 
-	return c.conclude(result), nil
+	result = c.conclude(result)
+	result = c.checkEvent(result)
+	return result, nil
 }
 
 // doChecks executes and returns each attempt.
@@ -132,7 +134,7 @@ func (c TCPChecker) doChecks() Attempts {
 // computes remaining values needed to fill out the result.
 // It detects degraded (high-latency) responses and makes
 // the conclusion about the result's status.
-func (c TCPChecker) conclude(result Result) Result {
+func (c *TCPChecker) conclude(result Result) (res Result) {
 	result.ThresholdRTT = c.ThresholdRTT
 
 	// Check errors (down)
@@ -156,5 +158,33 @@ func (c TCPChecker) conclude(result Result) Result {
 
 	result.Healthy = true
 	result.Message = result.URL + " is healthy"
+	return result
+}
+
+func (c *TCPChecker) checkEvent(result Result) (res Result) {
+	switch {
+	case result.Down:
+		if c.LastStatus == "healthy" || c.LastStatus == "" {
+			event := &Event{
+				Message:   c.URL + " is down",
+				Type:      "down",
+				URL:       c.URL,
+				Slug:      c.Slug,
+				Timestamp: result.Timestamp,
+			}
+			result.Event = event
+		}
+	case result.Healthy:
+		if c.LastStatus == "down" || c.LastStatus == "" {
+			event := &Event{
+				Message:   c.URL + " is up",
+				Type:      "up",
+				URL:       c.URL,
+				Slug:      c.Slug,
+				Timestamp: result.Timestamp,
+			}
+			result.Event = event
+		}
+	}
 	return result
 }

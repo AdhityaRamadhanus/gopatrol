@@ -6,7 +6,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/AdhityaRamadhanus/gopatrol"
 	daemon "github.com/AdhityaRamadhanus/gopatrol/daemon"
+	"github.com/AdhityaRamadhanus/gopatrol/mongo"
 	log "github.com/Sirupsen/logrus"
 	mgo "gopkg.in/mgo.v2"
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
@@ -67,10 +69,14 @@ func runDaemon(cliContext *cli.Context) {
 		"mongodb_uri": mongoURI,
 	}).Info("connected to mongodb")
 
-	daemon, err := daemon.NewDaemon(session)
+	// Creating Service
+	loggingService := mongo.NewLoggingService(session)
+	endpointService := mongo.NewEndpointService(session)
 
-	if err != nil {
-		fatalError(err)
+	daemon := &daemon.Daemon{
+		Checkup:         &gopatrol.Checkup{},
+		LoggingService:  loggingService,
+		EndpointService: endpointService,
 	}
 
 	// Set Check Interval
@@ -84,7 +90,7 @@ func runDaemon(cliContext *cli.Context) {
 	}).Info("Running daemon service")
 
 	checkersHandler := &handlers.CheckersHandler{
-		Daemon: daemon,
+		EndpointService: endpointService,
 	}
 
 	api := api.NewApi()

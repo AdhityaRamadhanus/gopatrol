@@ -1,8 +1,6 @@
 package mongo
 
 import (
-	"log"
-
 	"github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/AdhityaRamadhanus/gopatrol/config"
 	"gopkg.in/mgo.v2"
@@ -44,27 +42,21 @@ func (p *LoggingService) InsertLog(result gopatrol.Result) error {
 	return EndpointColl.Insert(result)
 }
 
-func (p *LoggingService) GetAllLogs(query interface{}, page, size int) ([]gopatrol.Result, error) {
+func (p *LoggingService) GetAllLogs(q map[string]interface{}) ([]gopatrol.Result, error) {
 	copySession := p.session.Copy()
 	defer copySession.Close()
 
 	LogColl := copySession.DB(config.DatabaseName).C(collName)
 	logs := []gopatrol.Result{}
-	if err := LogColl.
-		Find(query).
-		Skip(page * size).
-		Limit(size).
-		All(&logs); err != nil {
+	MongoQuery := LogColl.Find(q["query"])
+	if ok, val := q["pagination"].(bool); ok && val {
+		MongoQuery.
+			Skip(q["page"].(int) * q["limit"].(int)).
+			Limit(q["limit"].(int))
+	}
+
+	if err := MongoQuery.All(&logs); err != nil {
 		return nil, err
 	}
 	return logs, nil
-}
-
-func (p *LoggingService) Store(results []gopatrol.Result) error {
-	for _, result := range results {
-		if err := p.InsertLog(result); err != nil {
-			log.Println("Error Inserting Log", err)
-		}
-	}
-	return nil
 }

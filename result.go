@@ -44,6 +44,7 @@ type Result struct {
 	Notice string
 	// Message is an optional message to show on the status page.
 	Message string
+	Event   *Event
 }
 
 // ComputeStats computes basic statistics about r.

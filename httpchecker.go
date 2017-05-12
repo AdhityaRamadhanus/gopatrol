@@ -104,7 +104,10 @@ func (c HTTPChecker) Check() (Result, error) {
 
 	result.Times = c.doChecks(req)
 
-	return c.conclude(result), nil
+	result = c.conclude(result)
+	c.LastChecked = result.Timestamp
+	c.LastStatus = result.Status()
+	return result, nil
 }
 
 func (c *HTTPChecker) CheckEvents(result Result) *Event {
@@ -134,7 +137,7 @@ func (c *HTTPChecker) CheckEvents(result Result) *Event {
 }
 
 // doChecks executes req using c.Client and returns each attempt.
-func (c HTTPChecker) doChecks(req *http.Request) Attempts {
+func (c *HTTPChecker) doChecks(req *http.Request) Attempts {
 	checks := make(Attempts, c.Attempts)
 	for i := 0; i < c.Attempts; i++ {
 		start := time.Now()
@@ -157,7 +160,7 @@ func (c HTTPChecker) doChecks(req *http.Request) Attempts {
 // computes remaining values needed to fill out the result.
 // It detects degraded (high-latency) responses and makes
 // the conclusion about the result's status.
-func (c HTTPChecker) conclude(result Result) Result {
+func (c *HTTPChecker) conclude(result Result) Result {
 	result.ThresholdRTT = c.ThresholdRTT
 
 	// Check errors (down)
@@ -179,6 +182,8 @@ func (c HTTPChecker) conclude(result Result) Result {
 	}
 
 	result.Healthy = true
+	c.LastChecked = result.Timestamp
+	c.LastStatus = result.Status()
 	return result
 }
 
