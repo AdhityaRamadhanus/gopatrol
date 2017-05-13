@@ -6,16 +6,12 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-const (
-	collName = "Logs"
-)
-
 type LoggingService struct {
 	session  *mgo.Session
-	collName string
+	CollName string
 }
 
-func NewLoggingService(session *mgo.Session) *LoggingService {
+func NewLoggingService(session *mgo.Session, collName string) *LoggingService {
 	// Ensure Index
 	slugIdx := mgo.Index{
 		Key:        []string{"slug"},
@@ -26,7 +22,8 @@ func NewLoggingService(session *mgo.Session) *LoggingService {
 	}
 	session.DB(config.DatabaseName).C(collName).EnsureIndex(slugIdx)
 	return &LoggingService{
-		session: session,
+		session:  session,
+		CollName: collName,
 	}
 }
 
@@ -38,7 +35,7 @@ func (p *LoggingService) CopySession() *mgo.Session {
 func (p *LoggingService) InsertLog(result gopatrol.Result) error {
 	copySession := p.session.Copy()
 	defer copySession.Close()
-	EndpointColl := copySession.DB(config.DatabaseName).C(collName)
+	EndpointColl := copySession.DB(config.DatabaseName).C(p.CollName)
 	return EndpointColl.Insert(result)
 }
 
@@ -46,7 +43,7 @@ func (p *LoggingService) GetAllLogs(q map[string]interface{}) ([]gopatrol.Result
 	copySession := p.session.Copy()
 	defer copySession.Close()
 
-	LogColl := copySession.DB(config.DatabaseName).C(collName)
+	LogColl := copySession.DB(config.DatabaseName).C(p.CollName)
 	logs := []gopatrol.Result{}
 	MongoQuery := LogColl.Find(q["query"])
 	if ok, val := q["pagination"].(bool); ok && val {

@@ -70,7 +70,7 @@ func runDaemon(cliContext *cli.Context) {
 	}).Info("connected to mongodb")
 
 	// Creating Service
-	loggingService := mongo.NewLoggingService(session)
+	loggingService := mongo.NewLoggingService(session, "Logs")
 	endpointService := mongo.NewEndpointService(session)
 
 	daemon := &daemon.Daemon{
@@ -78,6 +78,10 @@ func runDaemon(cliContext *cli.Context) {
 		LoggingService:  loggingService,
 		EndpointService: endpointService,
 	}
+
+	// Setting Up Slack Notifier
+	slackNotifier := gopatrol.NewSlackNotifier(os.Getenv("SLACK_TOKEN"), os.Getenv("SLACK_CHANNEL"))
+	daemon.Notifier = append(daemon.Notifier, slackNotifier)
 
 	// Set Check Interval
 	interval, _ := time.ParseDuration(intervalRaw)

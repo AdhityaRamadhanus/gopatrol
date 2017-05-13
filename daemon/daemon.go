@@ -14,6 +14,7 @@ type Daemon struct {
 	CheckInterval   time.Duration
 	EndpointService checkup.EndpointService
 	LoggingService  checkup.LoggingService
+	NotifierService checkup.LoggingService
 }
 
 //Run the main loop for checkup to check endpoints and should be run as a goroutine
@@ -100,7 +101,6 @@ func (d *Daemon) logResults(results []checkup.Result) error {
 }
 
 func (d *Daemon) checkEventsAndSync(results []checkup.Result) error {
-	// var events []checkup.Event
 	var err error
 	for _, result := range results {
 		updateData := bson.M{
@@ -123,6 +123,10 @@ func (d *Daemon) checkEventsAndSync(results []checkup.Result) error {
 				"time":    result.Timestamp,
 				"url":     result.URL,
 			}).Info("New Notification")
+			for _, notifier := range d.Notifier {
+				// ignore the error, for now
+				go notifier.Notify(result)
+			}
 		}
 
 		// Update Status in MONGODB to sync with the memoery

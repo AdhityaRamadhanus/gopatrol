@@ -19,7 +19,7 @@ type Checker interface {
 // state to avoid sending repeated notices
 // more often than the admin would like.
 type Notifier interface {
-	Notify([]Result) error
+	Notify(Result) error
 }
 
 // DefaultConcurrentChecks is how many checks,
