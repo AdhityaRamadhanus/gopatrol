@@ -103,24 +103,33 @@ func (d *Daemon) checkEventsAndSync(results []checkup.Result) error {
 	// var events []checkup.Event
 	var err error
 	for _, result := range results {
+		updateData := bson.M{
+			"lastchecked": result.Timestamp,
+			"laststatus":  result.Status(),
+		}
 
-		if result.Event != nil {
+		if result.Event {
 			log.WithFields(log.Fields{
-				"message": result.Event.Message,
-				"time":    result.Event.Timestamp,
-				"url":     result.Event.URL,
+				"message": result.URL + " is " + result.Status(),
+				"time":    result.Timestamp,
+				"url":     result.URL,
 			}).Info("New Events")
+		}
+
+		if result.Notification {
+			updateData["lastchange"] = result.Timestamp
+			log.WithFields(log.Fields{
+				"message": result.URL + " is " + result.Status(),
+				"time":    result.Timestamp,
+				"url":     result.URL,
+			}).Info("New Notification")
 		}
 
 		// Update Status in MONGODB to sync with the memoery
 
-		var updateData = bson.M{
-			"$set": bson.M{
-				"lastchecked": result.Timestamp,
-				"laststatus":  result.Status(),
-			},
-		}
-		err = d.EndpointService.UpdateEndpointBySlug(result.Slug, updateData)
+		err = d.EndpointService.UpdateEndpointBySlug(result.Slug, bson.M{
+			"$set": updateData,
+		})
 	}
 
 	return err

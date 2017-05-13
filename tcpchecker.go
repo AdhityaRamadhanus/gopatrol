@@ -40,27 +40,8 @@ type TCPChecker struct {
 	// TCP connection to be established.
 	Timeout     time.Duration `json:"timeout,omitempty"`
 	LastChecked time.Time     `json:"last_checked"`
+	LastChange  time.Time     `json:"last_change"`
 	LastStatus  string        `json:"last_status"`
-}
-
-func (c TCPChecker) GetName() string {
-	return c.Name
-}
-
-func (c TCPChecker) GetURL() string {
-	return c.URL
-}
-
-func (c TCPChecker) GetSlug() string {
-	return c.Slug
-}
-
-func (c TCPChecker) GetLastChecked() time.Time {
-	return c.LastChecked
-}
-
-func (c TCPChecker) GetLastStatus() string {
-	return c.LastStatus
 }
 
 // Check performs checks using c according to its configuration.
@@ -74,7 +55,7 @@ func (c TCPChecker) Check() (Result, error) {
 	result.Times = c.doChecks()
 
 	result = c.conclude(result)
-	result = c.checkEvent(result)
+	result = c.checkEventAndNotif(result)
 	return result, nil
 }
 
@@ -161,29 +142,24 @@ func (c *TCPChecker) conclude(result Result) (res Result) {
 	return result
 }
 
-func (c *TCPChecker) checkEvent(result Result) (res Result) {
+func (c *TCPChecker) checkEventAndNotif(result Result) Result {
 	switch {
 	case result.Down:
 		if c.LastStatus == "healthy" || c.LastStatus == "" {
-			event := &Event{
-				Message:   c.URL + " is down",
-				Type:      "down",
-				URL:       c.URL,
-				Slug:      c.Slug,
-				Timestamp: result.Timestamp,
+			result.Notification = true
+			result.Event = true
+		} else {
+			lastResultTime := result.Timestamp
+			lastChangeTime := c.LastChange
+			diffMinutes := lastResultTime.Sub(lastChangeTime).Minutes()
+			if c.LastStatus == "down" && diffMinutes > 5.0 {
+				result.Notification = true
 			}
-			result.Event = event
 		}
 	case result.Healthy:
 		if c.LastStatus == "down" || c.LastStatus == "" {
-			event := &Event{
-				Message:   c.URL + " is up",
-				Type:      "up",
-				URL:       c.URL,
-				Slug:      c.Slug,
-				Timestamp: result.Timestamp,
-			}
-			result.Event = event
+			result.Notification = true
+			result.Event = true
 		}
 	}
 	return result

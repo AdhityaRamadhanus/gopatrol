@@ -54,27 +54,8 @@ type HTTPChecker struct {
 	Headers http.Header `json:"headers,omitempty"`
 
 	LastChecked time.Time `json:"last_checked"`
+	LastChange  time.Time `json:"last_change"`
 	LastStatus  string    `json:"last_status"`
-}
-
-func (c HTTPChecker) GetName() string {
-	return c.Name
-}
-
-func (c HTTPChecker) GetURL() string {
-	return c.URL
-}
-
-func (c HTTPChecker) GetSlug() string {
-	return c.Slug
-}
-
-func (c HTTPChecker) GetLastChecked() time.Time {
-	return c.LastChecked
-}
-
-func (c HTTPChecker) GetLastStatus() string {
-	return c.LastStatus
 }
 
 // Check performs checks using c according to its configuration.
@@ -105,35 +86,8 @@ func (c HTTPChecker) Check() (Result, error) {
 	result.Times = c.doChecks(req)
 
 	result = c.conclude(result)
-	c.LastChecked = result.Timestamp
-	c.LastStatus = result.Status()
+	result = c.checkEventAndNotif(result)
 	return result, nil
-}
-
-func (c *HTTPChecker) CheckEvents(result Result) *Event {
-	switch {
-	case result.Down:
-		if c.LastStatus == "healthy" {
-			return &Event{
-				Message:   c.GetURL() + " is down",
-				Type:      "down",
-				URL:       c.GetURL(),
-				Slug:      c.GetSlug(),
-				Timestamp: result.Timestamp,
-			}
-		}
-	case result.Healthy:
-		if c.LastStatus == "down" {
-			return &Event{
-				Message:   c.GetURL() + " is up",
-				Type:      "up",
-				URL:       c.GetURL(),
-				Slug:      c.GetSlug(),
-				Timestamp: result.Timestamp,
-			}
-		}
-	}
-	return nil
 }
 
 // doChecks executes req using c.Client and returns each attempt.
@@ -160,7 +114,7 @@ func (c *HTTPChecker) doChecks(req *http.Request) Attempts {
 // computes remaining values needed to fill out the result.
 // It detects degraded (high-latency) responses and makes
 // the conclusion about the result's status.
-func (c *HTTPChecker) conclude(result Result) Result {
+func (c HTTPChecker) conclude(result Result) Result {
 	result.ThresholdRTT = c.ThresholdRTT
 
 	// Check errors (down)
@@ -184,6 +138,29 @@ func (c *HTTPChecker) conclude(result Result) Result {
 	result.Healthy = true
 	c.LastChecked = result.Timestamp
 	c.LastStatus = result.Status()
+	return result
+}
+
+func (c HTTPChecker) checkEventAndNotif(result Result) Result {
+	switch {
+	case result.Down:
+		if c.LastStatus == "healthy" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		} else {
+			lastResultTime := result.Timestamp
+			lastChangeTime := c.LastChange
+			diffMinutes := lastResultTime.Sub(lastChangeTime).Minutes()
+			if c.LastStatus == "down" && diffMinutes > 5.0 {
+				result.Notification = true
+			}
+		}
+	case result.Healthy:
+		if c.LastStatus == "down" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		}
+	}
 	return result
 }
 

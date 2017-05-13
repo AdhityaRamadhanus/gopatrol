@@ -31,27 +31,8 @@ type DNSChecker struct {
 	// TCP connection to be established.
 	Timeout     time.Duration `json:"timeout,omitempty"`
 	LastChecked time.Time     `json:"last_checked"`
+	LastChange  time.Time     `json:"last_change"`
 	LastStatus  string        `json:"last_status"`
-}
-
-func (c DNSChecker) GetName() string {
-	return c.Name
-}
-
-func (c DNSChecker) GetURL() string {
-	return c.URL
-}
-
-func (c DNSChecker) GetSlug() string {
-	return c.Slug
-}
-
-func (c DNSChecker) GetLastChecked() time.Time {
-	return c.LastChecked
-}
-
-func (c DNSChecker) GetLastStatus() string {
-	return c.LastStatus
 }
 
 // Check performs checks using c according to its configuration.
@@ -63,8 +44,7 @@ func (c DNSChecker) Check() (Result, error) {
 	result := Result{Name: c.Name, URL: c.URL, Timestamp: time.Now().UTC(), Slug: c.Slug}
 	result.Times = c.doChecks()
 	result = c.conclude(result)
-	c.LastChecked = result.Timestamp
-	c.LastStatus = result.Status()
+	result = c.checkEventAndNotif(result)
 	return result, nil
 }
 
@@ -139,7 +119,28 @@ func (c *DNSChecker) conclude(result Result) Result {
 	}
 
 	result.Healthy = true
-	c.LastChecked = result.Timestamp
-	c.LastStatus = result.Status()
+	return result
+}
+
+func (c DNSChecker) checkEventAndNotif(result Result) Result {
+	switch {
+	case result.Down:
+		if c.LastStatus == "healthy" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		} else {
+			lastResultTime := result.Timestamp
+			lastChangeTime := c.LastChange
+			diffMinutes := lastResultTime.Sub(lastChangeTime).Minutes()
+			if c.LastStatus == "down" && diffMinutes > 5.0 {
+				result.Notification = true
+			}
+		}
+	case result.Healthy:
+		if c.LastStatus == "down" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		}
+	}
 	return result
 }

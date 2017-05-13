@@ -12,11 +12,6 @@ import (
 // Checker can create a Result.
 type Checker interface {
 	Check() (Result, error)
-	GetName() string
-	GetURL() string
-	GetSlug() string
-	GetLastChecked() time.Time
-	GetLastStatus() string
 }
 
 // Storage can store results.
