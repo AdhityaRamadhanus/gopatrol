@@ -14,18 +14,12 @@ type Checker interface {
 	Check() (Result, error)
 }
 
-// Storage can store results.
-type Storage interface {
-	Store([]Result) error
-}
-
 // Notifier can notify ops or sysadmins of
 // potential problems. A Notifier should keep
 // state to avoid sending repeated notices
 // more often than the admin would like.
 type Notifier interface {
 	Notify([]Result) error
-	GetType() string
 }
 
 // DefaultConcurrentChecks is how many checks,
@@ -50,17 +44,11 @@ type Checkup struct {
 	// be a few milliseconds or seconds apart.
 	Timestamp time.Time `json:"timestamp,omitempty"`
 
-	// Storage is the storage mechanism for saving the
-	// results of checks. Required if calling Store().
-	// If Storage is also a Maintainer, its Maintain()
-	// method will be called by c.CheckAndStore().
-	Storage Storage `json:"storage,omitempty"`
-
 	// Notifier is a notifier that will be passed the
 	// results after checks from all checkers have
 	// completed. Notifier may evaluate and choose to
 	// send a notification of potential problems.
-	Notifier Notifier `json:"notifier,omitempty"`
+	Notifier []Notifier `json:"notifier,omitempty"`
 }
 
 // Check performs the health checks. An error is only
@@ -101,12 +89,12 @@ func (c Checkup) Check() ([]Result, error) {
 		return results, errs
 	}
 
-	if c.Notifier != nil {
-		err := c.Notifier.Notify(results)
-		if err != nil {
-			return results, err
-		}
-	}
+	// if c.Notifier != nil {
+	// 	err := c.Notifier.Notify(results)
+	// 	if err != nil {
+	// 		return results, err
+	// 	}
+	// }
 
 	return results, nil
 }
