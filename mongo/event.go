@@ -6,15 +6,15 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-type LoggingService struct {
+type EventService struct {
 	session  *mgo.Session
 	CollName string
 }
 
-func NewLoggingService(session *mgo.Session, collName string) *LoggingService {
-	LogColl := session.DB(config.DatabaseName).C(collName)
+func NewEventService(session *mgo.Session, collName string) *EventService {
+	EventColl := session.DB(config.DatabaseName).C(collName)
 
-	LogColl.Create(&mgo.CollectionInfo{
+	EventColl.Create(&mgo.CollectionInfo{
 		Capped: true,
 		// Set Max Size in bytes to 5 GB (just a guess number)
 		MaxBytes: 5000 * 1000,
@@ -22,7 +22,7 @@ func NewLoggingService(session *mgo.Session, collName string) *LoggingService {
 	})
 
 	// Ensure Index
-	LogColl.EnsureIndex(mgo.Index{
+	EventColl.EnsureIndex(mgo.Index{
 		Key:        []string{"slug"},
 		Unique:     false,
 		DropDups:   false,
@@ -30,39 +30,39 @@ func NewLoggingService(session *mgo.Session, collName string) *LoggingService {
 		Sparse:     true,
 	})
 
-	return &LoggingService{
+	return &EventService{
 		session:  session,
 		CollName: collName,
 	}
 }
 
 // for more flexible use
-func (p *LoggingService) CopySession() *mgo.Session {
+func (p *EventService) CopySession() *mgo.Session {
 	return p.session.Copy()
 }
 
-func (p *LoggingService) InsertLog(result gopatrol.Result) error {
+func (p *EventService) InsertEvent(event gopatrol.Event) error {
 	copySession := p.session.Copy()
 	defer copySession.Close()
-	EndpointColl := copySession.DB(config.DatabaseName).C(p.CollName)
-	return EndpointColl.Insert(result)
+	EventColl := copySession.DB(config.DatabaseName).C(p.CollName)
+	return EventColl.Insert(event)
 }
 
-func (p *LoggingService) GetAllLogs(q map[string]interface{}) ([]gopatrol.Result, error) {
+func (p *EventService) GetAllEvents(q map[string]interface{}) ([]gopatrol.Event, error) {
 	copySession := p.session.Copy()
 	defer copySession.Close()
 
-	LogColl := copySession.DB(config.DatabaseName).C(p.CollName)
-	logs := []gopatrol.Result{}
-	MongoQuery := LogColl.Find(q["query"])
+	EventColl := copySession.DB(config.DatabaseName).C(p.CollName)
+	events := []gopatrol.Event{}
+	MongoQuery := EventColl.Find(q["query"])
 	if ok, val := q["pagination"].(bool); ok && val {
 		MongoQuery.
 			Skip(q["page"].(int) * q["limit"].(int)).
 			Limit(q["limit"].(int))
 	}
 
-	if err := MongoQuery.All(&logs); err != nil {
+	if err := MongoQuery.All(&events); err != nil {
 		return nil, err
 	}
-	return logs, nil
+	return events, nil
 }

@@ -12,9 +12,9 @@ import (
 type Daemon struct {
 	*checkup.Checkup
 	CheckInterval   time.Duration
-	EndpointService checkup.EndpointService
+	CheckersService checkup.CheckersService
 	LoggingService  checkup.LoggingService
-	NotifierService checkup.LoggingService
+	EventService    checkup.EventService
 }
 
 //Run the main loop for checkup to check endpoints and should be run as a goroutine
@@ -30,10 +30,10 @@ func (d *Daemon) Run() {
 			if err != nil {
 				log.WithError(err).Error(ErrFailedToDoCheck)
 			} else {
-				if err := d.logResults(results); err != nil {
-					log.WithError(err).Error(ErrFailedToStoreResult)
-				}
-				if err := d.checkEventsAndSync(results); err != nil {
+				// if err := d.logResults(results); err != nil {
+				// 	log.WithError(err).Error(ErrFailedToStoreResult)
+				// }
+				if err := d.checkResultsAndSync(results); err != nil {
 					log.WithError(err).Error(ErrFailedToStoreResult)
 				}
 			}
@@ -43,7 +43,7 @@ func (d *Daemon) Run() {
 }
 
 func (d *Daemon) setCheckers() error {
-	endpoints, err := d.EndpointService.GetAllEndpoints(map[string]interface{}{
+	endpoints, err := d.CheckersService.GetAllCheckers(map[string]interface{}{
 		"query": bson.M{},
 	})
 	if err != nil {
@@ -91,16 +91,16 @@ func (d *Daemon) setCheckers() error {
 	return nil
 }
 
-func (d *Daemon) logResults(results []checkup.Result) error {
-	for _, result := range results {
-		if err := d.LoggingService.InsertLog(result); err != nil {
-			log.Println("Error Inserting Log", err)
-		}
-	}
-	return nil
-}
+// func (d *Daemon) logResults(results []checkup.Result) error {
+// 	for _, result := range results {
+// 		if err := d.LoggingService.InsertLog(result); err != nil {
+// 			log.Println("Error Inserting Log", err)
+// 		}
+// 	}
+// 	return nil
+// }
 
-func (d *Daemon) checkEventsAndSync(results []checkup.Result) error {
+func (d *Daemon) checkResultsAndSync(results []checkup.Result) error {
 	var err error
 	for _, result := range results {
 		updateData := bson.M{
@@ -109,11 +109,15 @@ func (d *Daemon) checkEventsAndSync(results []checkup.Result) error {
 		}
 
 		if result.Event {
+			event := checkup.NewEvent(result)
+
 			log.WithFields(log.Fields{
-				"message": result.URL + " is " + result.Status(),
-				"time":    result.Timestamp,
-				"url":     result.URL,
+				"message": event.Message,
+				"time":    event.Timestamp,
+				"url":     event.URL,
 			}).Info("New Events")
+			// Ignore the error for now
+			d.EventService.InsertEvent(event)
 		}
 
 		if result.Notification {
@@ -131,7 +135,7 @@ func (d *Daemon) checkEventsAndSync(results []checkup.Result) error {
 
 		// Update Status in MONGODB to sync with the memoery
 
-		err = d.EndpointService.UpdateEndpointBySlug(result.Slug, bson.M{
+		err = d.CheckersService.UpdateCheckerBySlug(result.Slug, bson.M{
 			"$set": updateData,
 		})
 	}

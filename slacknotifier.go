@@ -106,7 +106,7 @@ func (s SlackNotifier) Notify(result Result) error {
 			Color: "danger",
 			Fields: []slack.AttachmentField{
 				slack.AttachmentField{
-					Title: "Last Checked",
+					Title: "Event Timestamp",
 					Value: result.Timestamp.Format("2006-01-02-15:04:05"),
 					Short: true,
 				},
@@ -115,12 +115,12 @@ func (s SlackNotifier) Notify(result Result) error {
 		params.Attachments = append(params.Attachments, attachment)
 	case result.Healthy:
 		attachment := slack.Attachment{
-			Title: result.Name + " just got resurrected",
+			Title: result.Name + " is up",
 			Text:  result.URL,
 			Color: "good",
 			Fields: []slack.AttachmentField{
 				slack.AttachmentField{
-					Title: "Last Checked",
+					Title: "Event Timestamp",
 					Value: result.Timestamp.Format("2006-01-02-15:04:05"),
 					Short: true,
 				},

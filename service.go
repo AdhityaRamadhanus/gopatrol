@@ -1,15 +1,11 @@
 package gopatrol
 
-import (
-	"time"
-)
-
-type EndpointService interface {
-	InsertEndpoint(endpoint interface{}) error
-	GetAllEndpoints(query map[string]interface{}) ([]interface{}, error)
-	GetEndpointBySlug(slug string) (interface{}, error)
-	DeleteEndpointBySlug(slug string) error
-	UpdateEndpointBySlug(slug string, updateData interface{}) error
+type CheckersService interface {
+	InsertChecker(checker interface{}) error
+	GetAllCheckers(query map[string]interface{}) ([]interface{}, error)
+	GetCheckerBySlug(slug string) (interface{}, error)
+	DeleteCheckerBySlug(slug string) error
+	UpdateCheckerBySlug(slug string, updateData interface{}) error
 }
 
 type LoggingService interface {
@@ -17,7 +13,13 @@ type LoggingService interface {
 	GetAllLogs(query map[string]interface{}) ([]Result, error)
 }
 
+type EventService interface {
+	InsertEvent(event Event) error
+	GetAllEvents(query map[string]interface{}) ([]Event, error)
+}
+
 type CacheService interface {
-	SetKey(key string, value interface{}, duration time.Duration) error
-	GetKey(key string) ([]byte, error)
+	// serialize to bytes
+	Set(key string, value []byte) error
+	Get(key string) ([]byte, error)
 }

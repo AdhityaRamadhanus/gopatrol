@@ -21,7 +21,6 @@ func WriteJSON(res http.ResponseWriter, code int, v interface{}) error {
 			"timestamp": time.Now().UTC().String(),
 			"error":     v,
 		}
-
 	default:
 		response = map[string]interface{}{
 			"timestamp": time.Now().UTC().String(),
@@ -29,5 +28,4 @@ func WriteJSON(res http.ResponseWriter, code int, v interface{}) error {
 		}
 	}
 	return json.NewEncoder(res).Encode(response)
-
 }

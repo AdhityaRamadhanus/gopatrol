@@ -6,18 +6,12 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type GetQuery struct {
-	Query      bson.M
-	Pagination bool
-	Page       int
-	Limit      int
+type CheckersService struct {
+	session  *mgo.Session
+	CollName string
 }
 
-type EndpointService struct {
-	session *mgo.Session
-}
-
-func NewEndpointService(session *mgo.Session) *EndpointService {
+func NewCheckersService(session *mgo.Session, collName string) *CheckersService {
 	// Ensure Index
 	slugIdx := mgo.Index{
 		Key:        []string{"slug"},
@@ -26,40 +20,40 @@ func NewEndpointService(session *mgo.Session) *EndpointService {
 		Background: true,
 		Sparse:     true,
 	}
-	session.DB(config.DatabaseName).C("Endpoint").EnsureIndex(slugIdx)
-	return &EndpointService{
-		session: session,
+	session.DB(config.DatabaseName).C(collName).EnsureIndex(slugIdx)
+	return &CheckersService{
+		session:  session,
+		CollName: collName,
 	}
 }
 
 // for more flexible use
-func (p *EndpointService) CopySession() *mgo.Session {
+func (p *CheckersService) CopySession() *mgo.Session {
 	return p.session.Copy()
 }
 
-func (p *EndpointService) InsertEndpoint(endpoint interface{}) error {
+func (p *CheckersService) InsertChecker(checker interface{}) error {
 	copySession := p.session.Copy()
 	defer copySession.Close()
-	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
-	// endpoint.ID = bson.NewObjectId()
-	return EndpointColl.Insert(endpoint)
+	CheckersColl := copySession.DB(config.DatabaseName).C(p.CollName)
+	return CheckersColl.Insert(checker)
 }
 
-func (p *EndpointService) UpdateEndpointBySlug(slug string, UpdateData interface{}) error {
+func (p *CheckersService) UpdateCheckerBySlug(slug string, UpdateData interface{}) error {
 	copySession := p.session.Copy()
 	defer copySession.Close()
-	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
-	return EndpointColl.Update(bson.M{"slug": slug}, UpdateData)
+	CheckersColl := copySession.DB(config.DatabaseName).C(p.CollName)
+	return CheckersColl.Update(bson.M{"slug": slug}, UpdateData)
 }
 
-func (p *EndpointService) GetAllEndpoints(q map[string]interface{}) ([]interface{}, error) {
+func (p *CheckersService) GetAllCheckers(q map[string]interface{}) ([]interface{}, error) {
 	copySession := p.session.Copy()
 	defer copySession.Close()
 
-	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
+	CheckersColl := copySession.DB(config.DatabaseName).C(p.CollName)
 	endpoints := []interface{}{}
 
-	MongoQuery := EndpointColl.Find(q["query"])
+	MongoQuery := CheckersColl.Find(q["query"])
 	if ok, val := q["pagination"].(bool); ok && val {
 		MongoQuery.
 			Skip(q["page"].(int) * q["limit"].(int)).
@@ -73,13 +67,13 @@ func (p *EndpointService) GetAllEndpoints(q map[string]interface{}) ([]interface
 	return endpoints, nil
 }
 
-func (p *EndpointService) GetEndpointBySlug(slug string) (interface{}, error) {
+func (p *CheckersService) GetCheckerBySlug(slug string) (interface{}, error) {
 	copySession := p.session.Copy()
 	defer copySession.Close()
 
-	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
+	CheckersColl := copySession.DB(config.DatabaseName).C(p.CollName)
 	var endpoint interface{}
-	if err := EndpointColl.
+	if err := CheckersColl.
 		Find(bson.M{
 			"slug": slug,
 		}).
@@ -89,10 +83,10 @@ func (p *EndpointService) GetEndpointBySlug(slug string) (interface{}, error) {
 	return endpoint, nil
 }
 
-func (p *EndpointService) DeleteEndpointBySlug(slug string) error {
+func (p *CheckersService) DeleteCheckerBySlug(slug string) error {
 	copySession := p.session.Copy()
 	defer copySession.Close()
 
-	EndpointColl := copySession.DB(config.DatabaseName).C("Endpoint")
-	return EndpointColl.Remove(bson.M{"slug": slug})
+	CheckersColl := copySession.DB(config.DatabaseName).C(p.CollName)
+	return CheckersColl.Remove(bson.M{"slug": slug})
 }

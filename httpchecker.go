@@ -48,7 +48,7 @@ type HTTPChecker struct {
 	// Client is the http.Client with which to make
 	// requests. If not set, DefaultHTTPClient is
 	// used.
-	Client *http.Client `json:"-"`
+	Client *http.Client `json:"-" bson:"-"`
 	// Headers contains headers to added to the request
 	// that is sent for the check
 	Headers http.Header `json:"headers,omitempty"`

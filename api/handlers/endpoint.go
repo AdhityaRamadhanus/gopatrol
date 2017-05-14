@@ -16,40 +16,37 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/asaskevich/govalidator"
 	"github.com/gorilla/mux"
+	"gopkg.in/mgo.v2"
 )
 
 type CheckersHandler struct {
-	EndpointService gopatrol.EndpointService
-	CacheService    gopatrol.CacheService
+	CheckerService gopatrol.CheckersService
+	CacheService   gopatrol.CacheService
 }
 
 func (h *CheckersHandler) AddRoutes(router *mux.Router) {
-	router.HandleFunc("/endpoints/all", h.GetAllEndpoints).Methods("GET")
-	router.HandleFunc("/endpoints/create", h.CreateChecker).Methods("POST")
-	router.HandleFunc("/endpoints/{slug}", h.GetOneBySlug).Methods("GET")
-	router.HandleFunc("/endpoints/{slug}/delete", h.DeleteOneBySlug).Methods("DELETE")
+	router.HandleFunc("/checkers/all", h.GetAllEndpoints).Methods("GET")
+	router.HandleFunc("/checkers/create", h.CreateChecker).Methods("POST")
+	router.HandleFunc("/checkers/{slug}", h.GetOneBySlug).Methods("GET")
+	router.HandleFunc("/checkers/{slug}/delete", h.DeleteOneBySlug).Methods("DELETE")
 }
 
 func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Request) {
 	// Read Body, limit to 1 MB //
 	body, err := ioutil.ReadAll(io.LimitReader(req.Body, 1048576))
 	if err != nil {
-		log.Println(err)
 		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToReadBody)
 		return
 	}
 	if err := req.Body.Close(); err != nil {
-		log.Println(err)
 		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToCloseBody)
 		return
 	}
-	endpoint := gopatrol.Endpoint{
-		Attempts:     5,
-		ThresholdRTT: 2000,
-	}
+	endpoint := struct {
+		Type string `json:"type"`
+	}{}
 	// Deserialize
 	if err := json.Unmarshal(body, &endpoint); err != nil {
-		log.Println(err)
 		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToUnmarshalJSON)
 		return
 	}
@@ -59,10 +56,10 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 			Attempts:    5,
 			LastChecked: time.Now(),
 			LastStatus:  "",
+			LastChange:  time.Now(),
 		}
 		// Deserialize
 		if err := json.Unmarshal(body, &httpChecker); err != nil {
-			log.Println(err)
 			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToUnmarshalJSON)
 			return
 		}
@@ -71,9 +68,8 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToValidateStruct)
 			return
 		}
-		if err := h.EndpointService.InsertEndpoint(httpChecker); err != nil {
-			log.Println(err)
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
+		if err := h.CheckerService.InsertChecker(httpChecker); err != nil {
+			helper.WriteJSON(res, http.StatusInternalServerError, err)
 			return
 		}
 		log.WithFields(log.Fields{
@@ -85,14 +81,14 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 		return
 	case "tcp":
 		tcpChecker := gopatrol.TCPChecker{
-			Timeout:     3000000000,
+			Timeout:     time.Second * 10,
 			Attempts:    5,
 			LastChecked: time.Now(),
 			LastStatus:  "",
+			LastChange:  time.Now(),
 		}
 		// Deserialize
 		if err := json.Unmarshal(body, &tcpChecker); err != nil {
-			log.Println(err)
 			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToUnmarshalJSON)
 			return
 		}
@@ -101,9 +97,8 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToValidateStruct)
 			return
 		}
-		if err := h.EndpointService.InsertEndpoint(tcpChecker); err != nil {
-			log.Println(err)
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
+		if err := h.CheckerService.InsertChecker(tcpChecker); err != nil {
+			helper.WriteJSON(res, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -120,10 +115,10 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 			Attempts:    5,
 			LastChecked: time.Now(),
 			LastStatus:  "",
+			LastChange:  time.Now(),
 		}
 		// Deserialize
 		if err := json.Unmarshal(body, &dnsChecker); err != nil {
-			log.Println(err)
 			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToUnmarshalJSON)
 			return
 		}
@@ -132,9 +127,8 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToValidateStruct)
 			return
 		}
-		if err := h.EndpointService.InsertEndpoint(dnsChecker); err != nil {
-			log.Println(err)
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
+		if err := h.CheckerService.InsertChecker(dnsChecker); err != nil {
+			helper.WriteJSON(res, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -162,14 +156,7 @@ func (h *CheckersHandler) GetAllEndpoints(res http.ResponseWriter, req *http.Req
 	if len(queryStrings["size"]) > 0 {
 		size, _ = strconv.Atoi(queryStrings["limit"][0])
 	}
-
-	// redisKey := fmt.Sprintf("products:%d:%d", page, size)
-	// respBytes, err := h.CacheService.GetKey(redisKey)
-	// if err == nil {
-	// 	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
-	// 	return
-	// }
-	checkers, _ := h.EndpointService.GetAllEndpoints(map[string]interface{}{
+	checkers, _ := h.CheckerService.GetAllCheckers(map[string]interface{}{
 		"query":      bson.M{},
 		"pagination": true,
 		"page":       page,
@@ -182,21 +169,26 @@ func (h *CheckersHandler) GetAllEndpoints(res http.ResponseWriter, req *http.Req
 	}
 	respBytes, err := json.Marshal(response)
 	if err != nil {
-		log.Println(err)
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
+		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToMarshalJSON)
 		return
 	}
-	// h.CacheService.SetKey(redisKey, respBytes, time.Second*5)
 	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
 }
 
 func (h *CheckersHandler) GetOneBySlug(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	slug := params["slug"]
-	endpoint, err := h.EndpointService.GetEndpointBySlug(slug)
+	endpoint, err := h.CheckerService.GetCheckerBySlug(slug)
 	if err != nil {
-		log.Println(err)
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
+		switch err {
+		case mgo.ErrNotFound:
+			helper.WriteJSON(res, http.StatusNotFound, "Cannot find Checker")
+			return
+		default:
+			log.WithError(err).Error("Failed to get checker")
+			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
+			return
+		}
 		return
 	}
 	response := map[string]interface{}{
@@ -204,23 +196,26 @@ func (h *CheckersHandler) GetOneBySlug(res http.ResponseWriter, req *http.Reques
 	}
 	respBytes, err := json.Marshal(response)
 	if err != nil {
-		log.Println(err)
 		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToMarshalJSON)
 		return
 	}
-	// h.CacheService.SetKey(redisKey, respBytes, time.Second*5)
 	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
 }
 
 func (h *CheckersHandler) DeleteOneBySlug(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	slug := params["slug"]
-	err := h.EndpointService.DeleteEndpointBySlug(slug)
+	err := h.CheckerService.DeleteCheckerBySlug(slug)
 	if err != nil {
-		log.Println(err)
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
-		return
+		switch err {
+		case mgo.ErrNotFound:
+			helper.WriteJSON(res, http.StatusNotFound, "Cannot find Checker")
+			return
+		default:
+			log.WithError(err).Error("Failed to get checker")
+			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
+			return
+		}
 	}
-	// h.CacheService.SetKey(redisKey, respBytes, time.Second*5)
 	helper.WriteJSON(res, http.StatusOK, "Endpoint Deleted")
 }
