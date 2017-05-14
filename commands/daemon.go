@@ -63,13 +63,11 @@ func runDaemon(cliContext *cli.Context) {
 	}).Info("connected to mongodb")
 
 	// Creating Service
-	loggingService := mongo.NewLoggingService(session, "Logs")
 	checkersService := mongo.NewCheckersService(session, "Checkers")
 	eventService := mongo.NewEventService(session, "Events")
 
 	daemon := &daemon.Daemon{
 		Checkup:         &gopatrol.Checkup{},
-		LoggingService:  loggingService,
 		CheckersService: checkersService,
 		EventService:    eventService,
 	}

@@ -13,7 +13,6 @@ type Daemon struct {
 	*checkup.Checkup
 	CheckInterval   time.Duration
 	CheckersService checkup.CheckersService
-	LoggingService  checkup.LoggingService
 	EventService    checkup.EventService
 }
 
@@ -90,15 +89,6 @@ func (d *Daemon) setCheckers() error {
 	d.Checkers = checkers
 	return nil
 }
-
-// func (d *Daemon) logResults(results []checkup.Result) error {
-// 	for _, result := range results {
-// 		if err := d.LoggingService.InsertLog(result); err != nil {
-// 			log.Println("Error Inserting Log", err)
-// 		}
-// 	}
-// 	return nil
-// }
 
 func (d *Daemon) checkResultsAndSync(results []checkup.Result) error {
 	var err error
