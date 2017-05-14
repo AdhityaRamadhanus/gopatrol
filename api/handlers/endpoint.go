@@ -65,7 +65,7 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 		}
 		httpChecker.Slug = helper.Slugify(httpChecker.Name)
 		if ok, err := govalidator.ValidateStruct(httpChecker); !ok || err != nil {
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToValidateStruct)
+			helper.WriteJSON(res, http.StatusBadRequest, api.ErrFailedToValidateStruct)
 			return
 		}
 		if err := h.CheckerService.InsertChecker(httpChecker); err != nil {
@@ -94,7 +94,7 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 		}
 		tcpChecker.Slug = helper.Slugify(tcpChecker.Name)
 		if ok, err := govalidator.ValidateStruct(tcpChecker); !ok || err != nil {
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToValidateStruct)
+			helper.WriteJSON(res, http.StatusBadRequest, api.ErrFailedToValidateStruct)
 			return
 		}
 		if err := h.CheckerService.InsertChecker(tcpChecker); err != nil {
@@ -124,7 +124,7 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 		}
 		dnsChecker.Slug = helper.Slugify(dnsChecker.Name)
 		if ok, err := govalidator.ValidateStruct(dnsChecker); !ok || err != nil {
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToValidateStruct)
+			helper.WriteJSON(res, http.StatusBadRequest, api.ErrFailedToValidateStruct)
 			return
 		}
 		if err := h.CheckerService.InsertChecker(dnsChecker); err != nil {

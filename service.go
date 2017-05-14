@@ -18,3 +18,16 @@ type CacheService interface {
 	Set(key string, value []byte) error
 	Get(key string) ([]byte, error)
 }
+
+type User struct {
+	Name         string `json:"name" bson:"name" valid:"required,email"`
+	Email        string `json:"email" bson:"email" valid:"required,email"`
+	HashPassword string `json:"-" bson:"hashpassword"`
+	Role         string `json:"role" bson:"role"`
+}
+
+type UsersService interface {
+	Register(name, email, role, plainPassword string) error
+	// UpdateUser(email string, updateData interface{}) error
+	Login(email, plainPassword string) (User, error)
+}

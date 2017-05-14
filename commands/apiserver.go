@@ -61,6 +61,7 @@ func runApiServer(cliContext *cli.Context) {
 	checkersService := mongo.NewCheckersService(session, "Checkers")
 	eventService := mongo.NewEventService(session, "Events")
 	cacheService := cache.NewBigCacheService()
+	usersService := mongo.NewUsersService(session, "Users")
 
 	checkersHandler := &handlers.CheckersHandler{
 		CheckerService: checkersService,
@@ -71,9 +72,14 @@ func runApiServer(cliContext *cli.Context) {
 		CacheService: cacheService,
 	}
 
+	usersHandler := &handlers.UsersHandler{
+		UsersService: usersService,
+	}
+
 	api := api.NewApi()
 	api.Handlers = append(api.Handlers, checkersHandler)
 	api.Handlers = append(api.Handlers, eventsHandler)
+	api.Handlers = append(api.Handlers, usersHandler)
 	api.InitHandler()
 	srv := api.CreateServer()
 	// Handle SIGINT, SIGTERN, SIGHUP signal from OS

@@ -20,7 +20,15 @@ func NewCheckersService(session *mgo.Session, collName string) *CheckersService 
 		Background: true,
 		Sparse:     true,
 	}
+	urlIdx := mgo.Index{
+		Key:        []string{"url"},
+		Unique:     true,
+		DropDups:   true,
+		Background: true,
+		Sparse:     true,
+	}
 	session.DB(config.DatabaseName).C(collName).EnsureIndex(slugIdx)
+	session.DB(config.DatabaseName).C(collName).EnsureIndex(urlIdx)
 	return &CheckersService{
 		session:  session,
 		CollName: collName,
