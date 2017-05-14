@@ -8,11 +8,6 @@ type CheckersService interface {
 	UpdateCheckerBySlug(slug string, updateData interface{}) error
 }
 
-type LoggingService interface {
-	InsertLog(result Result) error
-	GetAllLogs(query map[string]interface{}) ([]Result, error)
-}
-
 type EventService interface {
 	InsertEvent(event Event) error
 	GetAllEvents(query map[string]interface{}) ([]Event, error)
