@@ -1,7 +1,12 @@
 package config
 
+import (
+	"os"
+)
+
 var (
 	DatabaseName = "gopatrol"
+	JwtSecret    = os.Getenv("JWT_SECRET")
 )
 
 // Config provides the configuration for the API server

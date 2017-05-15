@@ -11,6 +11,7 @@ import (
 	"github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/AdhityaRamadhanus/gopatrol/api"
 	"github.com/AdhityaRamadhanus/gopatrol/api/helper"
+	"github.com/AdhityaRamadhanus/gopatrol/api/middlewares"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 )
@@ -21,7 +22,7 @@ type EventsHandlers struct {
 }
 
 func (h *EventsHandlers) AddRoutes(router *mux.Router) {
-	router.HandleFunc("/events/all", h.GetAllEvents).Methods("GET")
+	router.HandleFunc("/events/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEvents), 2)).Methods("GET")
 }
 
 func (h *EventsHandlers) GetAllEvents(res http.ResponseWriter, req *http.Request) {

@@ -21,8 +21,9 @@ type Api struct {
 
 func NewApi() *Api {
 	router := mux.NewRouter().StrictSlash(true)
+	apirouter := router.PathPrefix("/api/v1").Subrouter()
 	return &Api{
-		router: router,
+		router: apirouter,
 		Config: config.GetDefaultConfig(),
 	}
 }

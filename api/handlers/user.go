@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
+	jwt "github.com/dgrijalva/jwt-go"
+
 	"github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/AdhityaRamadhanus/gopatrol/api"
 	"github.com/AdhityaRamadhanus/gopatrol/api/helper"
-	log "github.com/Sirupsen/logrus"
+	"github.com/AdhityaRamadhanus/gopatrol/config"
 	"github.com/asaskevich/govalidator"
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )
 
@@ -107,9 +109,9 @@ func (h *UsersHandler) Login(res http.ResponseWriter, req *http.Request) {
 		"role":      dbUser.Role,
 		"timestamp": time.Now(),
 	})
-	tokenString, err := jwtToken.SignedString([]byte("SOME_SECRET"))
+	tokenString, err := jwtToken.SignedString([]byte(config.JwtSecret))
 	if err != nil {
-		log.Println(err)
+		log.WithError(err).Error("Failed to create access token")
 		helper.WriteJSON(res, http.StatusInternalServerError, "Failed to create access token")
 		return
 	}

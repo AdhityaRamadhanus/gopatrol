@@ -13,6 +13,7 @@ import (
 	"github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/AdhityaRamadhanus/gopatrol/api"
 	"github.com/AdhityaRamadhanus/gopatrol/api/helper"
+	"github.com/AdhityaRamadhanus/gopatrol/api/middlewares"
 	log "github.com/Sirupsen/logrus"
 	"github.com/asaskevich/govalidator"
 	"github.com/gorilla/mux"
@@ -25,10 +26,10 @@ type CheckersHandler struct {
 }
 
 func (h *CheckersHandler) AddRoutes(router *mux.Router) {
-	router.HandleFunc("/checkers/all", h.GetAllEndpoints).Methods("GET")
-	router.HandleFunc("/checkers/create", h.CreateChecker).Methods("POST")
-	router.HandleFunc("/checkers/{slug}", h.GetOneBySlug).Methods("GET")
-	router.HandleFunc("/checkers/{slug}/delete", h.DeleteOneBySlug).Methods("DELETE")
+	router.HandleFunc("/checkers/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEndpoints), 2)).Methods("GET")
+	router.HandleFunc("/checkers/create", middlewares.AuthenticateToken(http.HandlerFunc(h.CreateChecker), 1)).Methods("POST")
+	router.HandleFunc("/checkers/{slug}", middlewares.AuthenticateToken(http.HandlerFunc(h.GetOneBySlug), 2)).Methods("GET")
+	router.HandleFunc("/checkers/{slug}/delete", middlewares.AuthenticateToken(http.HandlerFunc(h.DeleteOneBySlug), 1)).Methods("DELETE")
 }
 
 func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Request) {
