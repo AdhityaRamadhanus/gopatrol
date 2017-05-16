@@ -65,6 +65,7 @@ func runApiServer(cliContext *cli.Context) {
 
 	checkersHandler := &handlers.CheckersHandler{
 		CheckerService: checkersService,
+		CacheService:   cacheService,
 	}
 
 	eventsHandler := &handlers.EventsHandlers{

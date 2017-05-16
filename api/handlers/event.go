@@ -11,7 +11,6 @@ import (
 	"github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/AdhityaRamadhanus/gopatrol/api"
 	"github.com/AdhityaRamadhanus/gopatrol/api/helper"
-	"github.com/AdhityaRamadhanus/gopatrol/api/middlewares"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 )
@@ -22,7 +21,8 @@ type EventsHandlers struct {
 }
 
 func (h *EventsHandlers) AddRoutes(router *mux.Router) {
-	router.HandleFunc("/events/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEvents), 2)).Methods("GET")
+	// 	router.HandleFunc("/events/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEvents), 2)).Methods("GET")
+	router.HandleFunc("/events/all", h.GetAllEvents).Methods("GET")
 }
 
 func (h *EventsHandlers) GetAllEvents(res http.ResponseWriter, req *http.Request) {
@@ -43,16 +43,20 @@ func (h *EventsHandlers) GetAllEvents(res http.ResponseWriter, req *http.Request
 		helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
 		return
 	}
-
+	query := bson.M{}
+	counts, _ := h.EventService.CountEvents(query)
 	events, _ := h.EventService.GetAllEvents(map[string]interface{}{
-		"query":      bson.M{},
+		"query":      query,
 		"pagination": true,
 		"page":       page,
 		"limit":      size,
 	})
 	response := map[string]interface{}{
-		"page":   page,
-		"size":   size,
+		"pagination": map[string]int{
+			"total": counts,
+			"page":  page,
+			"size":  size,
+		},
 		"events": events,
 	}
 	respBytes, err = json.Marshal(response)

@@ -66,3 +66,10 @@ func (p *EventService) GetAllEvents(q map[string]interface{}) ([]gopatrol.Event,
 	}
 	return events, nil
 }
+
+func (p *EventService) CountEvents(query map[string]interface{}) (int, error) {
+	copySession := p.session.Copy()
+	defer copySession.Close()
+	EventColl := copySession.DB(config.DatabaseName).C(p.CollName)
+	return EventColl.Find(query).Count()
+}

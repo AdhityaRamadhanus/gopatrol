@@ -7,6 +7,7 @@ import (
 	"github.com/AdhityaRamadhanus/gopatrol/api/middlewares"
 	"github.com/AdhityaRamadhanus/gopatrol/config"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type ApiHandler interface {
@@ -36,7 +37,7 @@ func (api *Api) InitHandler() {
 
 func (api *Api) CreateServer() *http.Server {
 	srv := &http.Server{
-		Handler:      middlewares.HTTPReqLogger(api.router),
+		Handler:      cors.Default().Handler(middlewares.HTTPReqLogger(api.router)),
 		Addr:         api.Config.Address,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  5 * time.Second,

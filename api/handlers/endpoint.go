@@ -2,22 +2,21 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/AdhityaRamadhanus/gopatrol/api"
 	"github.com/AdhityaRamadhanus/gopatrol/api/helper"
-	"github.com/AdhityaRamadhanus/gopatrol/api/middlewares"
 	log "github.com/Sirupsen/logrus"
 	"github.com/asaskevich/govalidator"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type CheckersHandler struct {
@@ -26,10 +25,12 @@ type CheckersHandler struct {
 }
 
 func (h *CheckersHandler) AddRoutes(router *mux.Router) {
-	router.HandleFunc("/checkers/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEndpoints), 2)).Methods("GET")
-	router.HandleFunc("/checkers/create", middlewares.AuthenticateToken(http.HandlerFunc(h.CreateChecker), 1)).Methods("POST")
-	router.HandleFunc("/checkers/{slug}", middlewares.AuthenticateToken(http.HandlerFunc(h.GetOneBySlug), 2)).Methods("GET")
-	router.HandleFunc("/checkers/{slug}/delete", middlewares.AuthenticateToken(http.HandlerFunc(h.DeleteOneBySlug), 1)).Methods("DELETE")
+	// router.HandleFunc("/checkers/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEndpoints), 2)).Methods("GET")
+	// router.HandleFunc("/checkers/create", middlewares.AuthenticateToken(http.HandlerFunc(h.CreateChecker), 1)).Methods("POST")
+	// router.HandleFunc("/checkers/{slug}", middlewares.AuthenticateToken(http.HandlerFunc(h.GetOneBySlug), 2)).Methods("GET")
+	// router.HandleFunc("/checkers/{slug}/delete", middlewares.AuthenticateToken(http.HandlerFunc(h.DeleteOneBySlug), 1)).Methods("DELETE")
+	router.HandleFunc("/checkers/all", h.GetAllEndpoints).Methods("GET")
+	router.HandleFunc("/checkers/stats", h.GetStatisticCheckers).Methods("GET")
 }
 
 func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Request) {
@@ -149,6 +150,7 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 func (h *CheckersHandler) GetAllEndpoints(res http.ResponseWriter, req *http.Request) {
 	page := 0
 	size := 10
+
 	// Take Querystring
 	queryStrings := req.URL.Query()
 	if len(queryStrings["page"]) > 0 {
@@ -157,17 +159,32 @@ func (h *CheckersHandler) GetAllEndpoints(res http.ResponseWriter, req *http.Req
 	if len(queryStrings["size"]) > 0 {
 		size, _ = strconv.Atoi(queryStrings["limit"][0])
 	}
+
+	query := bson.M{}
+
+	if len(queryStrings["status"]) > 0 {
+		query["status"] = queryStrings["status"][0]
+	}
+
+	counts, _ := h.CheckerService.CountCheckers(query)
+
 	checkers, _ := h.CheckerService.GetAllCheckers(map[string]interface{}{
-		"query":      bson.M{},
+		"query":      query,
 		"pagination": true,
 		"page":       page,
 		"limit":      size,
+		"select":     bson.M{"name": 1, "laststatus": 1, "type": 1, "url": 1},
 	})
+
 	response := map[string]interface{}{
-		"page":      page,
-		"size":      size,
-		"endpoints": checkers,
+		"pagination": map[string]int{
+			"total": counts,
+			"page":  page,
+			"size":  size,
+		},
+		"checkers": checkers,
 	}
+
 	respBytes, err := json.Marshal(response)
 	if err != nil {
 		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToMarshalJSON)
@@ -219,4 +236,38 @@ func (h *CheckersHandler) DeleteOneBySlug(res http.ResponseWriter, req *http.Req
 		}
 	}
 	helper.WriteJSON(res, http.StatusOK, "Endpoint Deleted")
+}
+
+func (h *CheckersHandler) GetStatisticCheckers(res http.ResponseWriter, req *http.Request) {
+	cacheKey := fmt.Sprintf("checkers-statistic")
+	respBytes, err := h.CacheService.Get(cacheKey)
+	if err == nil {
+		helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
+		return
+	}
+
+	countsHealthy, _ := h.CheckerService.CountCheckers(bson.M{
+		"laststatus": "healthy",
+	})
+	countsDown, _ := h.CheckerService.CountCheckers(bson.M{
+		"laststatus": "down",
+	})
+	countsAll, _ := h.CheckerService.CountCheckers(bson.M{})
+
+	response := map[string]interface{}{
+		"checkers": map[string]int{
+			"healthy": countsHealthy,
+			"down":    countsDown,
+			"all":     countsAll,
+			"unknown": countsAll - countsHealthy - countsDown,
+		},
+	}
+
+	respBytes, err = json.Marshal(response)
+	if err != nil {
+		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToMarshalJSON)
+		return
+	}
+	h.CacheService.Set(cacheKey, respBytes)
+	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
 }

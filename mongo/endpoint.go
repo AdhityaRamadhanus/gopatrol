@@ -62,17 +62,28 @@ func (p *CheckersService) GetAllCheckers(q map[string]interface{}) ([]interface{
 	endpoints := []interface{}{}
 
 	MongoQuery := CheckersColl.Find(q["query"])
-	if ok, val := q["pagination"].(bool); ok && val {
+	if val, ok := q["pagination"].(bool); ok && val {
 		MongoQuery.
 			Skip(q["page"].(int) * q["limit"].(int)).
 			Limit(q["limit"].(int))
 	}
-
-	if err := MongoQuery.
-		All(&endpoints); err != nil {
+	if val, ok := q["select"]; ok {
+		MongoQuery.Select(val)
+	}
+	if err := MongoQuery.All(&endpoints); err != nil {
 		return nil, err
 	}
+
+	// response["checkers"] = endpoints
+
 	return endpoints, nil
+}
+
+func (p *CheckersService) CountCheckers(query map[string]interface{}) (int, error) {
+	copySession := p.session.Copy()
+	defer copySession.Close()
+	CheckersColl := copySession.DB(config.DatabaseName).C(p.CollName)
+	return CheckersColl.Find(query).Count()
 }
 
 func (p *CheckersService) GetCheckerBySlug(slug string) (interface{}, error) {

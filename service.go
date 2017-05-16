@@ -4,6 +4,7 @@ type CheckersService interface {
 	InsertChecker(checker interface{}) error
 	GetAllCheckers(query map[string]interface{}) ([]interface{}, error)
 	GetCheckerBySlug(slug string) (interface{}, error)
+	CountCheckers(query map[string]interface{}) (int, error)
 	DeleteCheckerBySlug(slug string) error
 	UpdateCheckerBySlug(slug string, updateData interface{}) error
 }
@@ -11,6 +12,7 @@ type CheckersService interface {
 type EventService interface {
 	InsertEvent(event Event) error
 	GetAllEvents(query map[string]interface{}) ([]Event, error)
+	CountEvents(query map[string]interface{}) (int, error)
 }
 
 type CacheService interface {
