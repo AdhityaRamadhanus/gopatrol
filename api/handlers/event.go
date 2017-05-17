@@ -34,7 +34,7 @@ func (h *EventsHandlers) GetAllEvents(res http.ResponseWriter, req *http.Request
 		page, _ = strconv.Atoi(queryStrings["page"][0])
 	}
 	if len(queryStrings["size"]) > 0 {
-		size, _ = strconv.Atoi(queryStrings["limit"][0])
+		size, _ = strconv.Atoi(queryStrings["size"][0])
 	}
 
 	cacheKey := fmt.Sprintf("events:%d:%d", page, size)

@@ -30,7 +30,9 @@ func (h *CheckersHandler) AddRoutes(router *mux.Router) {
 	// router.HandleFunc("/checkers/{slug}", middlewares.AuthenticateToken(http.HandlerFunc(h.GetOneBySlug), 2)).Methods("GET")
 	// router.HandleFunc("/checkers/{slug}/delete", middlewares.AuthenticateToken(http.HandlerFunc(h.DeleteOneBySlug), 1)).Methods("DELETE")
 	router.HandleFunc("/checkers/all", h.GetAllEndpoints).Methods("GET")
+	router.HandleFunc("/checkers/create", h.CreateChecker).Methods("POST")
 	router.HandleFunc("/checkers/stats", h.GetStatisticCheckers).Methods("GET")
+	router.HandleFunc("/checkers/{slug}/delete", h.DeleteOneBySlug).Methods("POST")
 }
 
 func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Request) {
@@ -157,7 +159,7 @@ func (h *CheckersHandler) GetAllEndpoints(res http.ResponseWriter, req *http.Req
 		page, _ = strconv.Atoi(queryStrings["page"][0])
 	}
 	if len(queryStrings["size"]) > 0 {
-		size, _ = strconv.Atoi(queryStrings["limit"][0])
+		size, _ = strconv.Atoi(queryStrings["size"][0])
 	}
 
 	query := bson.M{}
@@ -173,7 +175,7 @@ func (h *CheckersHandler) GetAllEndpoints(res http.ResponseWriter, req *http.Req
 		"pagination": true,
 		"page":       page,
 		"limit":      size,
-		"select":     bson.M{"name": 1, "laststatus": 1, "type": 1, "url": 1},
+		"select":     bson.M{"name": 1, "laststatus": 1, "type": 1, "url": 1, "lastchecked": 1, "slug": 1},
 	})
 
 	response := map[string]interface{}{
@@ -235,6 +237,8 @@ func (h *CheckersHandler) DeleteOneBySlug(res http.ResponseWriter, req *http.Req
 			return
 		}
 	}
+	// remove caching
+	h.CacheService.Set("checkers-statistic", nil)
 	helper.WriteJSON(res, http.StatusOK, "Endpoint Deleted")
 }
 
