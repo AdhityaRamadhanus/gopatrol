@@ -70,11 +70,9 @@ func (p *CheckersService) GetAllCheckers(q map[string]interface{}) ([]interface{
 	if val, ok := q["select"]; ok {
 		MongoQuery.Select(val)
 	}
-	if err := MongoQuery.All(&endpoints); err != nil {
+	if err := MongoQuery.Sort("-$natural").All(&endpoints); err != nil {
 		return nil, err
 	}
-
-	// response["checkers"] = endpoints
 
 	return endpoints, nil
 }

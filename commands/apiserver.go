@@ -5,7 +5,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/AdhityaRamadhanus/gopatrol/cache"
 	"github.com/AdhityaRamadhanus/gopatrol/mongo"
 	log "github.com/Sirupsen/logrus"
 	mgo "gopkg.in/mgo.v2"
@@ -60,17 +59,17 @@ func runApiServer(cliContext *cli.Context) {
 	// Creating Service
 	checkersService := mongo.NewCheckersService(session, "Checkers")
 	eventService := mongo.NewEventService(session, "Events")
-	cacheService := cache.NewBigCacheService()
+	// cacheService := cache.NewBigCacheService()
 	usersService := mongo.NewUsersService(session, "Users")
 
 	checkersHandler := &handlers.CheckersHandler{
 		CheckerService: checkersService,
-		CacheService:   cacheService,
+		// CacheService:   cacheService,
 	}
 
 	eventsHandler := &handlers.EventsHandlers{
 		EventService: eventService,
-		CacheService: cacheService,
+		// CacheService: cacheService,
 	}
 
 	usersHandler := &handlers.UsersHandler{

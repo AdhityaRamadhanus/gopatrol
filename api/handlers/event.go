@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -37,12 +36,12 @@ func (h *EventsHandlers) GetAllEvents(res http.ResponseWriter, req *http.Request
 		size, _ = strconv.Atoi(queryStrings["size"][0])
 	}
 
-	cacheKey := fmt.Sprintf("events:%d:%d", page, size)
-	respBytes, err := h.CacheService.Get(cacheKey)
-	if err == nil {
-		helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
-		return
-	}
+	// cacheKey := fmt.Sprintf("events:%d:%d", page, size)
+	// respBytes, err := h.CacheService.Get(cacheKey)
+	// if err == nil {
+	// 	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
+	// 	return
+	// }
 	query := bson.M{}
 	counts, _ := h.EventService.CountEvents(query)
 	events, _ := h.EventService.GetAllEvents(map[string]interface{}{
@@ -59,13 +58,13 @@ func (h *EventsHandlers) GetAllEvents(res http.ResponseWriter, req *http.Request
 		},
 		"events": events,
 	}
-	respBytes, err = json.Marshal(response)
+	respBytes, err := json.Marshal(response)
 	if err != nil {
 		log.Println(err)
 		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
 		return
 	}
-	h.CacheService.Set(cacheKey, respBytes)
+	// h.CacheService.Set(cacheKey, respBytes)
 	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
 	return
 }

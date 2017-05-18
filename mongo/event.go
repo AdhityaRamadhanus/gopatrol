@@ -61,7 +61,7 @@ func (p *EventService) GetAllEvents(q map[string]interface{}) ([]gopatrol.Event,
 			Limit(q["limit"].(int))
 	}
 
-	if err := MongoQuery.All(&events); err != nil {
+	if err := MongoQuery.Sort("-timestamp").All(&events); err != nil {
 		return nil, err
 	}
 	return events, nil

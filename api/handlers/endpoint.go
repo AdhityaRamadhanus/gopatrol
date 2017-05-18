@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -115,7 +114,7 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 		return
 	case "dns":
 		dnsChecker := gopatrol.DNSChecker{
-			Timeout:     3000000000,
+			Timeout:     time.Second * 10,
 			Attempts:    5,
 			LastChecked: time.Now(),
 			LastStatus:  "",
@@ -238,17 +237,17 @@ func (h *CheckersHandler) DeleteOneBySlug(res http.ResponseWriter, req *http.Req
 		}
 	}
 	// remove caching
-	h.CacheService.Set("checkers-statistic", nil)
+	// h.CacheService.Set("checkers-statistic", nil)
 	helper.WriteJSON(res, http.StatusOK, "Endpoint Deleted")
 }
 
 func (h *CheckersHandler) GetStatisticCheckers(res http.ResponseWriter, req *http.Request) {
-	cacheKey := fmt.Sprintf("checkers-statistic")
-	respBytes, err := h.CacheService.Get(cacheKey)
-	if err == nil {
-		helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
-		return
-	}
+	// cacheKey := fmt.Sprintf("checkers-statistic")
+	// respBytes, err := h.CacheService.Get(cacheKey)
+	// if err == nil {
+	// 	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
+	// 	return
+	// }
 
 	countsHealthy, _ := h.CheckerService.CountCheckers(bson.M{
 		"laststatus": "healthy",
@@ -267,11 +266,11 @@ func (h *CheckersHandler) GetStatisticCheckers(res http.ResponseWriter, req *htt
 		},
 	}
 
-	respBytes, err = json.Marshal(response)
+	respBytes, err := json.Marshal(response)
 	if err != nil {
 		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToMarshalJSON)
 		return
 	}
-	h.CacheService.Set(cacheKey, respBytes)
+	// h.CacheService.Set(cacheKey, respBytes)
 	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
 }
