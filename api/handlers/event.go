@@ -1,16 +1,14 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/AdhityaRamadhanus/gopatrol"
-	"github.com/AdhityaRamadhanus/gopatrol/api"
-	"github.com/AdhityaRamadhanus/gopatrol/api/helper"
-	log "github.com/Sirupsen/logrus"
+	"github.com/AdhityaRamadhanus/gopatrol/api/middlewares"
+	"github.com/AdhityaRamadhanus/gopatrol/api/render"
 	"github.com/gorilla/mux"
 )
 
@@ -19,9 +17,12 @@ type EventsHandlers struct {
 	CacheService gopatrol.CacheService
 }
 
-func (h *EventsHandlers) AddRoutes(router *mux.Router) {
-	// 	router.HandleFunc("/events/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEvents), 2)).Methods("GET")
-	router.HandleFunc("/events/all", h.GetAllEvents).Methods("GET")
+func (h *EventsHandlers) AddRoutes(router *mux.Router, isUnixDomain bool) {
+	if !isUnixDomain {
+		router.HandleFunc("/events/all", middlewares.AuthenticateToken(middlewares.Gzip(http.HandlerFunc(h.GetAllEvents)), 2)).Methods("GET")
+	} else {
+		router.HandleFunc("/events/all", h.GetAllEvents).Methods("GET")
+	}
 }
 
 func (h *EventsHandlers) GetAllEvents(res http.ResponseWriter, req *http.Request) {
@@ -50,7 +51,7 @@ func (h *EventsHandlers) GetAllEvents(res http.ResponseWriter, req *http.Request
 		"page":       page,
 		"limit":      size,
 	})
-	response := map[string]interface{}{
+	response := render.JSON{
 		"pagination": map[string]int{
 			"total": counts,
 			"page":  page,
@@ -58,13 +59,6 @@ func (h *EventsHandlers) GetAllEvents(res http.ResponseWriter, req *http.Request
 		},
 		"events": events,
 	}
-	respBytes, err := json.Marshal(response)
-	if err != nil {
-		log.Println(err)
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
-		return
-	}
 	// h.CacheService.Set(cacheKey, respBytes)
-	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
-	return
+	render.WriteJSON(res, http.StatusOK, response)
 }

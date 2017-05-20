@@ -43,7 +43,8 @@ func (d *Daemon) Run() {
 
 func (d *Daemon) setCheckers() error {
 	endpoints, err := d.CheckersService.GetAllCheckers(map[string]interface{}{
-		"query": bson.M{},
+		"query":      bson.M{},
+		"pagination": false,
 	})
 	if err != nil {
 		log.WithError(err).Error("Initialize daemon failed")

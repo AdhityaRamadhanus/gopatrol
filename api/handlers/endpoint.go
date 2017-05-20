@@ -11,6 +11,8 @@ import (
 	"github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/AdhityaRamadhanus/gopatrol/api"
 	"github.com/AdhityaRamadhanus/gopatrol/api/helper"
+	"github.com/AdhityaRamadhanus/gopatrol/api/middlewares"
+	"github.com/AdhityaRamadhanus/gopatrol/api/render"
 	log "github.com/Sirupsen/logrus"
 	"github.com/asaskevich/govalidator"
 	"github.com/gorilla/mux"
@@ -23,26 +25,34 @@ type CheckersHandler struct {
 	CacheService   gopatrol.CacheService
 }
 
-func (h *CheckersHandler) AddRoutes(router *mux.Router) {
-	// router.HandleFunc("/checkers/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEndpoints), 2)).Methods("GET")
-	// router.HandleFunc("/checkers/create", middlewares.AuthenticateToken(http.HandlerFunc(h.CreateChecker), 1)).Methods("POST")
-	// router.HandleFunc("/checkers/{slug}", middlewares.AuthenticateToken(http.HandlerFunc(h.GetOneBySlug), 2)).Methods("GET")
-	// router.HandleFunc("/checkers/{slug}/delete", middlewares.AuthenticateToken(http.HandlerFunc(h.DeleteOneBySlug), 1)).Methods("DELETE")
-	router.HandleFunc("/checkers/all", h.GetAllEndpoints).Methods("GET")
-	router.HandleFunc("/checkers/create", h.CreateChecker).Methods("POST")
-	router.HandleFunc("/checkers/stats", h.GetStatisticCheckers).Methods("GET")
-	router.HandleFunc("/checkers/{slug}/delete", h.DeleteOneBySlug).Methods("POST")
+func (h *CheckersHandler) AddRoutes(router *mux.Router, isUnixDomain bool) {
+	if !isUnixDomain {
+		router.HandleFunc("/checkers/all", middlewares.AuthenticateToken(middlewares.Gzip(http.HandlerFunc(h.GetAllEndpoints)), 2)).Methods("GET")
+		// router.HandleFunc("/checkers/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEndpoints), 2)).Methods("GET")
+		router.HandleFunc("/checkers/create", middlewares.AuthenticateToken(http.HandlerFunc(h.CreateChecker), 1)).Methods("POST")
+		router.HandleFunc("/checkers/{slug}", middlewares.AuthenticateToken(http.HandlerFunc(h.GetOneBySlug), 2)).Methods("GET")
+		router.HandleFunc("/checkers/{slug}/delete", middlewares.AuthenticateToken(http.HandlerFunc(h.DeleteOneBySlug), 1)).Methods("DELETE")
+	} else {
+		router.HandleFunc("/checkers/all", h.GetAllEndpoints).Methods("GET")
+		router.HandleFunc("/checkers/create", h.CreateChecker).Methods("POST")
+		router.HandleFunc("/checkers/stats", h.GetStatisticCheckers).Methods("GET")
+		router.HandleFunc("/checkers/{slug}/delete", h.DeleteOneBySlug).Methods("POST")
+	}
 }
 
 func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Request) {
 	// Read Body, limit to 1 MB //
 	body, err := ioutil.ReadAll(io.LimitReader(req.Body, 1048576))
 	if err != nil {
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToReadBody)
+		render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+			"error": api.ErrFailedToReadBody,
+		})
 		return
 	}
 	if err := req.Body.Close(); err != nil {
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToCloseBody)
+		render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+			"error": api.ErrFailedToCloseBody,
+		})
 		return
 	}
 	endpoint := struct {
@@ -50,7 +60,9 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 	}{}
 	// Deserialize
 	if err := json.Unmarshal(body, &endpoint); err != nil {
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToUnmarshalJSON)
+		render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+			"error": api.ErrFailedToUnmarshalJSON,
+		})
 		return
 	}
 	switch endpoint.Type {
@@ -63,16 +75,22 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 		}
 		// Deserialize
 		if err := json.Unmarshal(body, &httpChecker); err != nil {
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToUnmarshalJSON)
+			render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+				"error": api.ErrFailedToUnmarshalJSON,
+			})
 			return
 		}
 		httpChecker.Slug = helper.Slugify(httpChecker.Name)
 		if ok, err := govalidator.ValidateStruct(httpChecker); !ok || err != nil {
-			helper.WriteJSON(res, http.StatusBadRequest, api.ErrFailedToValidateStruct)
+			render.WriteJSON(res, http.StatusBadRequest, render.JSON{
+				"error": api.ErrFailedToValidateStruct,
+			})
 			return
 		}
 		if err := h.CheckerService.InsertChecker(httpChecker); err != nil {
-			helper.WriteJSON(res, http.StatusInternalServerError, err)
+			render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+				"error": err,
+			})
 			return
 		}
 		log.WithFields(log.Fields{
@@ -80,7 +98,9 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 			"url":  httpChecker.URL,
 		}).Info("Add Endpoint")
 
-		helper.WriteJSON(res, http.StatusCreated, "Endpoint created")
+		render.WriteJSON(res, http.StatusCreated, render.JSON{
+			"message": "Endpoint created",
+		})
 		return
 	case "tcp":
 		tcpChecker := gopatrol.TCPChecker{
@@ -92,16 +112,22 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 		}
 		// Deserialize
 		if err := json.Unmarshal(body, &tcpChecker); err != nil {
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToUnmarshalJSON)
+			render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+				"error": api.ErrFailedToUnmarshalJSON,
+			})
 			return
 		}
 		tcpChecker.Slug = helper.Slugify(tcpChecker.Name)
 		if ok, err := govalidator.ValidateStruct(tcpChecker); !ok || err != nil {
-			helper.WriteJSON(res, http.StatusBadRequest, api.ErrFailedToValidateStruct)
+			render.WriteJSON(res, http.StatusBadRequest, render.JSON{
+				"error": api.ErrFailedToValidateStruct,
+			})
 			return
 		}
 		if err := h.CheckerService.InsertChecker(tcpChecker); err != nil {
-			helper.WriteJSON(res, http.StatusInternalServerError, err)
+			render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+				"error": err,
+			})
 			return
 		}
 
@@ -110,7 +136,9 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 			"url":  tcpChecker.URL,
 		}).Info("Add Endpoint")
 
-		helper.WriteJSON(res, http.StatusCreated, "Endpoint created")
+		render.WriteJSON(res, http.StatusCreated, render.JSON{
+			"message": "Endpoint Created",
+		})
 		return
 	case "dns":
 		dnsChecker := gopatrol.DNSChecker{
@@ -122,16 +150,22 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 		}
 		// Deserialize
 		if err := json.Unmarshal(body, &dnsChecker); err != nil {
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToUnmarshalJSON)
+			render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+				"error": api.ErrFailedToUnmarshalJSON,
+			})
 			return
 		}
 		dnsChecker.Slug = helper.Slugify(dnsChecker.Name)
 		if ok, err := govalidator.ValidateStruct(dnsChecker); !ok || err != nil {
-			helper.WriteJSON(res, http.StatusBadRequest, api.ErrFailedToValidateStruct)
+			render.WriteJSON(res, http.StatusBadRequest, render.JSON{
+				"error": api.ErrFailedToValidateStruct,
+			})
 			return
 		}
 		if err := h.CheckerService.InsertChecker(dnsChecker); err != nil {
-			helper.WriteJSON(res, http.StatusInternalServerError, err)
+			render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+				"error": err,
+			})
 			return
 		}
 
@@ -140,10 +174,14 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 			"url":  dnsChecker.URL,
 		}).Info("Add Endpoint")
 
-		helper.WriteJSON(res, http.StatusCreated, "Endpoint created")
+		render.WriteJSON(res, http.StatusCreated, render.JSON{
+			"message": "Endpoint created",
+		})
 		return
 	default:
-		helper.WriteJSON(res, http.StatusBadRequest, api.ErrUnknownEndpointTYpe)
+		render.WriteJSON(res, http.StatusBadRequest, render.JSON{
+			"error": api.ErrUnknownEndpointTYpe,
+		})
 		return
 	}
 }
@@ -151,47 +189,50 @@ func (h *CheckersHandler) CreateChecker(res http.ResponseWriter, req *http.Reque
 func (h *CheckersHandler) GetAllEndpoints(res http.ResponseWriter, req *http.Request) {
 	page := 0
 	size := 10
-
+	response := map[string]interface{}{}
 	// Take Querystring
 	queryStrings := req.URL.Query()
-	if len(queryStrings["page"]) > 0 {
-		page, _ = strconv.Atoi(queryStrings["page"][0])
-	}
-	if len(queryStrings["size"]) > 0 {
-		size, _ = strconv.Atoi(queryStrings["size"][0])
-	}
-
 	query := bson.M{}
 
 	if len(queryStrings["status"]) > 0 {
 		query["status"] = queryStrings["status"][0]
 	}
 
-	counts, _ := h.CheckerService.CountCheckers(query)
-
-	checkers, _ := h.CheckerService.GetAllCheckers(map[string]interface{}{
-		"query":      query,
-		"pagination": true,
-		"page":       page,
-		"limit":      size,
-		"select":     bson.M{"name": 1, "laststatus": 1, "type": 1, "url": 1, "lastchecked": 1, "slug": 1},
-	})
-
-	response := map[string]interface{}{
-		"pagination": map[string]int{
-			"total": counts,
-			"page":  page,
-			"size":  size,
-		},
-		"checkers": checkers,
+	// Pagination is true
+	if val, ok := queryStrings["pagination"]; ok && val[0] == "false" {
+		checkers, _ := h.CheckerService.GetAllCheckers(map[string]interface{}{
+			"query":      query,
+			"pagination": false,
+			"select":     bson.M{"name": 1, "laststatus": 1, "type": 1, "url": 1, "lastchecked": 1, "slug": 1},
+		})
+		response = render.JSON{
+			"checkers": checkers,
+		}
+	} else {
+		if len(queryStrings["page"]) > 0 {
+			page, _ = strconv.Atoi(queryStrings["page"][0])
+		}
+		if len(queryStrings["size"]) > 0 {
+			size, _ = strconv.Atoi(queryStrings["size"][0])
+		}
+		counts, _ := h.CheckerService.CountCheckers(query)
+		checkers, _ := h.CheckerService.GetAllCheckers(map[string]interface{}{
+			"query":      query,
+			"pagination": true,
+			"page":       page,
+			"limit":      size,
+			"select":     bson.M{"name": 1, "laststatus": 1, "type": 1, "url": 1, "lastchecked": 1, "slug": 1},
+		})
+		response = render.JSON{
+			"pagination": map[string]int{
+				"total": counts,
+				"page":  page,
+				"size":  size,
+			},
+			"checkers": checkers,
+		}
 	}
-
-	respBytes, err := json.Marshal(response)
-	if err != nil {
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToMarshalJSON)
-		return
-	}
-	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
+	render.WriteJSON(res, http.StatusOK, response)
 }
 
 func (h *CheckersHandler) GetOneBySlug(res http.ResponseWriter, req *http.Request) {
@@ -201,24 +242,22 @@ func (h *CheckersHandler) GetOneBySlug(res http.ResponseWriter, req *http.Reques
 	if err != nil {
 		switch err {
 		case mgo.ErrNotFound:
-			helper.WriteJSON(res, http.StatusNotFound, "Cannot find Checker")
+			render.WriteJSON(res, http.StatusNotFound, render.JSON{
+				"error": "Cannot find Checker",
+			})
 			return
 		default:
 			log.WithError(err).Error("Failed to get checker")
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
+			render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+				"error": api.ErrInternalServerError,
+			})
 			return
 		}
 		return
 	}
-	response := map[string]interface{}{
-		"data": endpoint,
-	}
-	respBytes, err := json.Marshal(response)
-	if err != nil {
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToMarshalJSON)
-		return
-	}
-	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
+	render.WriteJSON(res, http.StatusOK, render.JSON{
+		"checker": endpoint,
+	})
 }
 
 func (h *CheckersHandler) DeleteOneBySlug(res http.ResponseWriter, req *http.Request) {
@@ -228,27 +267,24 @@ func (h *CheckersHandler) DeleteOneBySlug(res http.ResponseWriter, req *http.Req
 	if err != nil {
 		switch err {
 		case mgo.ErrNotFound:
-			helper.WriteJSON(res, http.StatusNotFound, "Cannot find Checker")
+			render.WriteJSON(res, http.StatusNotFound, render.JSON{
+				"error": "Cannot find Checker",
+			})
 			return
 		default:
 			log.WithError(err).Error("Failed to get checker")
-			helper.WriteJSON(res, http.StatusInternalServerError, api.ErrInternalServerError)
+			render.WriteJSON(res, http.StatusInternalServerError, render.JSON{
+				"error": api.ErrInternalServerError,
+			})
 			return
 		}
 	}
-	// remove caching
-	// h.CacheService.Set("checkers-statistic", nil)
-	helper.WriteJSON(res, http.StatusOK, "Endpoint Deleted")
+	render.WriteJSON(res, http.StatusOK, render.JSON{
+		"message": "Endpoint Deleted",
+	})
 }
 
 func (h *CheckersHandler) GetStatisticCheckers(res http.ResponseWriter, req *http.Request) {
-	// cacheKey := fmt.Sprintf("checkers-statistic")
-	// respBytes, err := h.CacheService.Get(cacheKey)
-	// if err == nil {
-	// 	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
-	// 	return
-	// }
-
 	countsHealthy, _ := h.CheckerService.CountCheckers(bson.M{
 		"laststatus": "healthy",
 	})
@@ -257,7 +293,7 @@ func (h *CheckersHandler) GetStatisticCheckers(res http.ResponseWriter, req *htt
 	})
 	countsAll, _ := h.CheckerService.CountCheckers(bson.M{})
 
-	response := map[string]interface{}{
+	response := render.JSON{
 		"checkers": map[string]int{
 			"healthy": countsHealthy,
 			"down":    countsDown,
@@ -266,11 +302,6 @@ func (h *CheckersHandler) GetStatisticCheckers(res http.ResponseWriter, req *htt
 		},
 	}
 
-	respBytes, err := json.Marshal(response)
-	if err != nil {
-		helper.WriteJSON(res, http.StatusInternalServerError, api.ErrFailedToMarshalJSON)
-		return
-	}
 	// h.CacheService.Set(cacheKey, respBytes)
-	helper.WriteGzipBytes(res, req, http.StatusOK, respBytes)
+	render.WriteJSON(res, http.StatusOK, response)
 }

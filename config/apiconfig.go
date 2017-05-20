@@ -7,17 +7,11 @@ import (
 var (
 	DatabaseName = "gopatrol"
 	JwtSecret    = os.Getenv("JWT_SECRET")
+	MongoURI     = os.Getenv("MONGODB_URI")
 )
 
-// Config provides the configuration for the API server
-type Config struct {
-	EnableCors bool
-	Address    string
-}
-
-func GetDefaultConfig() *Config {
-	return &Config{
-		EnableCors: true,
-		Address:    ":3000",
-	}
+func SetTestingConfig() {
+	DatabaseName = "gopatrol-test"
+	JwtSecret = "gopatrol-test-jwt-secret"
+	MongoURI = "mongodb://localhost:27017"
 }

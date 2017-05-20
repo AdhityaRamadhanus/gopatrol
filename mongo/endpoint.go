@@ -62,7 +62,8 @@ func (p *CheckersService) GetAllCheckers(q map[string]interface{}) ([]interface{
 	endpoints := []interface{}{}
 
 	MongoQuery := CheckersColl.Find(q["query"])
-	if val, ok := q["pagination"].(bool); ok && val {
+	// log.Println(q["pagination"].(bool))
+	if ok := q["pagination"].(bool); ok {
 		MongoQuery.
 			Skip(q["page"].(int) * q["limit"].(int)).
 			Limit(q["limit"].(int))

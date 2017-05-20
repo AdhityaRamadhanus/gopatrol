@@ -18,12 +18,12 @@ build_gopatrol:
 ifeq ($(OS),Linux)
 	mkdir -p build/linux
 	@echo "Build gopatrol..."
-	GOOS=linux  go build -ldflags "-s -w -X main.Version=$(VERSION)" -o build/linux/$(DAEMON_NAME) cmd/main.go
+	GOOS=linux  go build -ldflags "-s -w -X main.Version=$(VERSION)" -o build/linux/$(DAEMON_NAME) cmd/server/main.go
 	sudo cp ./build/linux/gopatrol /usr/local/bin/
 endif
 ifeq ($(OS) ,Darwin)
 	@echo "Build gopatrol..."
-	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/mac/$(DAEMON_NAME) cmd/main.go
+	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/mac/$(DAEMON_NAME) cmd/server/main.go
 	sudo cp ./build/mac/gopatrol /usr/local/bin/
 endif
 	@echo "Succesfully Build for ${OS} version:= ${VERSION}"
