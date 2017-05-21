@@ -8,3 +8,6 @@ env:
   - ENV=Testing
 services:
   - mongodb
+branches:
+  only:
+  - refactor-rest
