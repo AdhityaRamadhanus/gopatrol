@@ -15,7 +15,7 @@ import (
 type SlackNotifier struct {
 	ID         string        `json:"-"`
 	RTM        *slack.RTM    `json:"-"`
-	SlackApi   *slack.Client `json:"-"`
+	SlackAPI   *slack.Client `json:"-"`
 	ChannelID  string        `json:"channel" validate:"required"`
 	SlackToken string        `json:"token" validate:"required"`
 	Type       string        `json:"type" validate:"required"`
@@ -34,7 +34,7 @@ var (
 func NewSlackNotifier(slackToken string, channelID string) *SlackNotifier {
 	slackNotifier := &SlackNotifier{
 		SlackToken: slackToken,
-		SlackApi:   slack.New(slackToken),
+		SlackAPI:   slack.New(slackToken),
 		ChannelID:  channelID,
 	}
 	go slackNotifier.run()
@@ -69,7 +69,7 @@ func (t *SlackNotifier) help(ev *slack.MessageEvent) (err error) {
 }
 
 func (t *SlackNotifier) run() {
-	t.RTM = t.SlackApi.NewRTM()
+	t.RTM = t.SlackAPI.NewRTM()
 	go t.RTM.ManageConnection()
 
 	for msg := range t.RTM.IncomingEvents {
@@ -89,11 +89,13 @@ func (t *SlackNotifier) run() {
 	}
 }
 
-func (s *SlackNotifier) GetType() string {
+//GetType return what type of notifier is thiss
+func (t SlackNotifier) GetType() string {
 	return "slack"
 }
 
-func (s SlackNotifier) Notify(result Result) error {
+//Notify implements notifier interface, send slack message about an event
+func (t SlackNotifier) Notify(result Result) error {
 	params := slack.PostMessageParameters{}
 	params.Attachments = []slack.Attachment{}
 	// decide whether to send announcements or not
@@ -131,6 +133,6 @@ func (s SlackNotifier) Notify(result Result) error {
 
 	var err error
 	headerMessage := fmt.Sprintf("<!channel> Service Announcements")
-	_, _, err = s.SlackApi.PostMessage(s.ChannelID, headerMessage, params)
+	_, _, err = t.SlackAPI.PostMessage(t.ChannelID, headerMessage, params)
 	return err
 }

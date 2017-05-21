@@ -10,5 +10,5 @@ services:
   - mongodb
 branches:
   only:
-  - refactor-rest
+  - master
 sudo: required

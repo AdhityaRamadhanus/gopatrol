@@ -2,6 +2,7 @@ package gopatrol
 
 import "time"
 
+//Event is an event (up or down) of a checker
 type Event struct {
 	Slug      string    `json:"slug" bson:"slug"`
 	Name      string    `json:"name" bson:"name"`
@@ -12,6 +13,7 @@ type Event struct {
 	Reason    string    `json:"reason" bson:"reason"`
 }
 
+//NewEvent create an event from a result returned by a checker
 func NewEvent(result Result) Event {
 	event := Event{
 		Name:      result.Name,

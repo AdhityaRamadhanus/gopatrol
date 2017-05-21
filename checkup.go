@@ -1,4 +1,4 @@
-// Package checkup provides means for checking and reporting the
+// Package gopatrol provides means for checking and reporting the
 // status and performance of various endpoints in a distributed,
 // lock-free, self-hosted fashion.
 package gopatrol
