@@ -11,3 +11,4 @@ services:
 branches:
   only:
   - refactor-rest
+sudo: required
