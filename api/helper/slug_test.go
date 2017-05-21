@@ -1,7 +1,6 @@
 package helper_test
 
 import (
-	"log"
 	"testing"
 
 	"github.com/AdhityaRamadhanus/gopatrol/api/helper"
@@ -24,7 +23,6 @@ func TestSlugify(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		log.Println("Slugigy", test.Input)
 		output := helper.Slugify(test.Input)
 		assert.Equal(t, test.ExpectedOutput, output, "Parsed value is wrong")
 	}
