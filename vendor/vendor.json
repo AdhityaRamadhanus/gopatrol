@@ -247,6 +247,12 @@
 			"revisionTime": "2017-04-20T18:42:42Z"
 		},
 		{
+			"checksumSHA1": "hCRfPlNpqv8tvVivLzmXsoUOf1c=",
+			"path": "github.com/rs/xhandler",
+			"revision": "ed27b6fd65218132ee50cd95f38474a3d8a2cd12",
+			"revisionTime": "2016-06-18T19:32:21Z"
+		},
+		{
 			"checksumSHA1": "1keN4Q9F8uHk/Gt5YXG0oCEecKM=",
 			"path": "github.com/urfave/cli",
 			"revision": "2526b57c56f30b50466c96c4133b1a4ad0f0191f",
