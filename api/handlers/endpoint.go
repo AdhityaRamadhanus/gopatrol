@@ -28,10 +28,9 @@ type CheckersHandler struct {
 func (h *CheckersHandler) AddRoutes(router *mux.Router, isUnixDomain bool) {
 	if !isUnixDomain {
 		router.HandleFunc("/checkers/all", middlewares.AuthenticateToken(middlewares.Gzip(http.HandlerFunc(h.GetAllEndpoints)), 2)).Methods("GET")
-		// router.HandleFunc("/checkers/all", middlewares.AuthenticateToken(http.HandlerFunc(h.GetAllEndpoints), 2)).Methods("GET")
 		router.HandleFunc("/checkers/create", middlewares.AuthenticateToken(http.HandlerFunc(h.CreateChecker), 1)).Methods("POST")
 		router.HandleFunc("/checkers/{slug}", middlewares.AuthenticateToken(http.HandlerFunc(h.GetOneBySlug), 2)).Methods("GET")
-		router.HandleFunc("/checkers/{slug}/delete", middlewares.AuthenticateToken(http.HandlerFunc(h.DeleteOneBySlug), 1)).Methods("DELETE")
+		router.HandleFunc("/checkers/{slug}/delete", middlewares.AuthenticateToken(http.HandlerFunc(h.DeleteOneBySlug), 1)).Methods("POST")
 	} else {
 		router.HandleFunc("/checkers/all", h.GetAllEndpoints).Methods("GET")
 		router.HandleFunc("/checkers/create", h.CreateChecker).Methods("POST")

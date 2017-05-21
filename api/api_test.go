@@ -3,6 +3,7 @@ package api_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -16,6 +17,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var (
@@ -27,15 +29,19 @@ var (
 func clearDatabase(session *mgo.Session) {
 	checkersColl := session.DB(config.DatabaseName).C("Checkers")
 	usersColl := session.DB(config.DatabaseName).C("Users")
-	checkersColl.DropCollection()
-	usersColl.DropCollection()
+	checkersColl.RemoveAll(bson.M{})
+	usersColl.RemoveAll(bson.M{})
 }
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.WarnLevel)
 	config.SetTestingConfig()
 	app = api.NewApi()
-	session, _ := mgo.Dial(config.MongoURI)
+	session, err := mgo.Dial(config.MongoURI)
+	if err != nil {
+		log.Error("Failed to Connect to MongoDB")
+		os.Exit(1)
+	}
 	defer session.Close()
 
 	clearDatabase(session)
@@ -43,6 +49,7 @@ func TestMain(m *testing.M) {
 	// Creating Service
 	usersService := mongo.NewUsersService(session, "Users")
 	checkersService := mongo.NewCheckersService(session, "Checkers")
+	eventsService := mongo.NewEventService(session, "Events")
 
 	if err := usersService.Register("Adhitya Ramadhanus", "adhitya.ramadhanus@gmail.com", "admin", "123321"); err != nil {
 		log.Println(err)
@@ -54,9 +61,13 @@ func TestMain(m *testing.M) {
 	usersHandler := &handlers.UsersHandler{
 		UsersService: usersService,
 	}
+	eventsHandler := &handlers.EventsHandlers{
+		EventService: eventsService,
+	}
 
 	app.Handlers = append(app.Handlers, checkersHandler)
 	app.Handlers = append(app.Handlers, usersHandler)
+	app.Handlers = append(app.Handlers, eventsHandler)
 	isUnixDomainSocket := false
 	app.InitHandler(isUnixDomainSocket)
 	srv = app.CreateServer(isUnixDomainSocket)
@@ -67,7 +78,7 @@ func TestMain(m *testing.M) {
 func TestLoginUsers(t *testing.T) {
 	userReq := struct {
 		Email    string `json:"email"`
-		Password string `json:"password`
+		Password string `json:"password"`
 	}{
 		Email:    "adhitya.ramadhanus@gmail.com",
 		Password: "123321",
@@ -90,44 +101,103 @@ func TestLoginUsers(t *testing.T) {
 	accessToken = token
 }
 
-func TestCreateCheckers(t *testing.T) {
-	checkerReq := gopatrol.TCPChecker{
-		Type: "tcp",
-		Name: "Testing TCP Checker",
-		URL:  "localhost:6379",
+func TestCheckers(t *testing.T) {
+	testCases := []struct {
+		RequestBody    interface{}
+		Method         string
+		Path           string
+		ExpectedStatus int
+	}{
+		{
+			RequestBody: gopatrol.TCPChecker{
+				Type: "tcp",
+				Name: "Testing TCP Checker",
+				URL:  "localhost:6379",
+			},
+			Method:         "POST",
+			Path:           "/api/v1/checkers/create",
+			ExpectedStatus: 201,
+		},
+		{
+			Method:         "GET",
+			Path:           "/api/v1/checkers/all",
+			ExpectedStatus: 200,
+		},
+		{
+			Method:         "GET",
+			Path:           "/api/v1/checkers/testing-tcp-checker",
+			ExpectedStatus: 200,
+		},
+		{
+			RequestBody:    nil,
+			Method:         "POST",
+			Path:           "/api/v1/checkers/testing-tcp-checker/delete",
+			ExpectedStatus: 200,
+		},
 	}
-	jsonReq, _ := json.Marshal(checkerReq)
-	req, _ := http.NewRequest("POST", "/api/v1/checkers/create", bytes.NewBuffer(jsonReq))
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	response := httptest.NewRecorder()
-	srv.Handler.ServeHTTP(response, req)
-	log.Println(response.Body.String())
 
-	assert.Equal(t, http.StatusCreated, response.Code, "Expected to return 200 in /users/login")
-	decodedResp := map[string]interface{}{}
-	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&decodedResp); err != nil {
-		t.Error("Failed to decode response in /checkers/create")
+	for _, test := range testCases {
+		t.Logf("Testing %s %s", test.Method, test.Path)
+		var httpReq *http.Request
+		switch test.Method {
+		case "POST":
+			jsonReq, _ := json.Marshal(test.RequestBody)
+			req, _ := http.NewRequest(test.Method, test.Path, bytes.NewBuffer(jsonReq))
+			httpReq = req
+		case "GET":
+			req, _ := http.NewRequest(test.Method, test.Path, nil)
+			httpReq = req
+		}
+
+		httpReq.Header.Set("Authorization", "Bearer "+accessToken)
+		response := httptest.NewRecorder()
+		srv.Handler.ServeHTTP(response, httpReq)
+		log.Println(response.Body.String())
+		assert.Equal(t, test.ExpectedStatus, response.Code, fmt.Sprintf("Expected to return %d in %s", test.ExpectedStatus, test.Path))
+		assert.Equal(t, "application/json; charset=utf-8", response.Header().Get("Content-Type"), "Expected JSON")
+		decoder := json.NewDecoder(response.Body)
+		decodedResp := map[string]interface{}{}
+		err := decoder.Decode(&decodedResp)
+		assert.NoError(t, err, "Expected No Error in parsing JSON")
 	}
-	message, ok := decodedResp["message"].(string)
-	if !ok {
-		t.Error("Faield to get data response in /checkers/login")
-	}
-	assert.Equal(t, "Endpoint Created", message)
 }
 
-func TestGetCheckers(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/api/v1/checkers/all", nil)
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	w := httptest.NewRecorder()
-	srv.Handler.ServeHTTP(w, req)
+func TestEvents(t *testing.T) {
+	testCases := []struct {
+		RequestBody    interface{}
+		Method         string
+		Path           string
+		ExpectedStatus int
+	}{
+		{
+			Method:         "GET",
+			Path:           "/api/v1/events/all",
+			ExpectedStatus: 200,
+		},
+	}
 
-	assert.Equal(t, http.StatusOK, w.Code, "Expected to return 200 in /checkers/all")
-}
+	for _, test := range testCases {
+		t.Logf("Testing %s %s", test.Method, test.Path)
+		var httpReq *http.Request
+		switch test.Method {
+		case "POST":
+			jsonReq, _ := json.Marshal(test.RequestBody)
+			req, _ := http.NewRequest(test.Method, test.Path, bytes.NewBuffer(jsonReq))
+			httpReq = req
+		case "GET":
+			req, _ := http.NewRequest(test.Method, test.Path, nil)
+			httpReq = req
+		}
 
-func executeRequest(req *http.Request) *httptest.ResponseRecorder {
-	rr := httptest.NewRecorder()
-	srv.Handler.ServeHTTP(rr, req)
-	log.Println(rr.Body.String())
-	return rr
+		httpReq.Header.Set("Authorization", "Bearer "+accessToken)
+		response := httptest.NewRecorder()
+		srv.Handler.ServeHTTP(response, httpReq)
+		log.Println(response.Body.String())
+		assert.Equal(t, test.ExpectedStatus, response.Code, fmt.Sprintf("Expected to return %d in %s", test.ExpectedStatus, test.Path))
+		assert.Equal(t, "application/json; charset=utf-8", response.Header().Get("Content-Type"), "Expected JSON")
+		decoder := json.NewDecoder(response.Body)
+		decodedResp := map[string]interface{}{}
+		err := decoder.Decode(&decodedResp)
+		assert.NoError(t, err, "Expected No Error in parsing JSON")
+	}
 }

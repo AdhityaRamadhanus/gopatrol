@@ -23,7 +23,7 @@ func TestCheckAndStore(t *testing.T) {
 		t.Errorf("Expected %d checks to be executed, but had: %d", want, got)
 	}
 
-	if got, want := f.notified, 1; got != want {
+	if got, want := f.notified, 0; got != want {
 		t.Errorf("Expected Notify() to be called %d time, called %d times", want, got)
 	}
 

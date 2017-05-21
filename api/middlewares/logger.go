@@ -14,6 +14,6 @@ func HTTPReqLogger(nextHandler http.Handler) http.Handler {
 		log.WithFields(log.Fields{
 			"method":    req.Method,
 			"resp time": time.Since(start),
-		}).Info(req.RequestURI)
+		}).Info("PATH " + req.URL.Path)
 	})
 }
