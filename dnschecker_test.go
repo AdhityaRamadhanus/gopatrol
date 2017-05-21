@@ -157,7 +157,7 @@ func TestDNSCheckerWithTLSNoVerify(t *testing.T) {
 				return
 			}
 			// Keep connection open for enough time to complete test
-			conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
+			conn.SetDeadline(time.Now().Add(1000 * time.Millisecond))
 			tmp := make([]byte, 1)
 			conn.Read(tmp)
 		}
@@ -261,7 +261,7 @@ func TestDNSCheckerWithTLSVerifySuccess(t *testing.T) {
 				return
 			}
 			// Keep connection open for enough time to complete test
-			conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
+			conn.SetDeadline(time.Now().Add(1000 * time.Millisecond))
 			tmp := make([]byte, 1)
 			conn.Read(tmp)
 		}
@@ -365,7 +365,7 @@ func TestDNSCheckerWithTLSVerifyError(t *testing.T) {
 				return
 			}
 			// Keep connection open for enough time to complete test
-			conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
+			conn.SetDeadline(time.Now().Add(1000 * time.Millisecond))
 			tmp := make([]byte, 1)
 			conn.Read(tmp)
 		}
