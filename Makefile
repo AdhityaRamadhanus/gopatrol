@@ -14,7 +14,7 @@ PROTOC_BIN=~/protoc/bin/protoc
 
 # target #
 
-default: clean_build build_gopatrol build_gopatrol_cli
+default: clean_build test build_gopatrol build_gopatrol_cli
 
 build_gopatrol: 
 	@echo "Setup gopatrol"
