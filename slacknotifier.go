@@ -1,31 +1,24 @@
 package gopatrol
 
 import (
-	"log"
 	"math/rand"
 	"strings"
 	"time"
 
 	"fmt"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/nlopes/slack"
 )
 
-type EndpointState struct {
-	Name       string
-	URL        string
-	LastChange int64
-	LastStatus StatusText
-}
-
 // SlackNotifier is the main struct consist of all the sub component including slack api, real-time messaing api and face detector
 type SlackNotifier struct {
-	ID             string                   `json:"-"`
-	RTM            *slack.RTM               `json:"-"`
-	SlackApi       *slack.Client            `json:"-"`
-	EndpointStates map[string]EndpointState `json:"-"`
-	ChannelID      string                   `json:"channel"`
-	SlackToken     string                   `json:"token"`
+	ID         string        `json:"-"`
+	RTM        *slack.RTM    `json:"-"`
+	SlackAPI   *slack.Client `json:"-"`
+	ChannelID  string        `json:"channel" validate:"required"`
+	SlackToken string        `json:"token" validate:"required"`
+	Type       string        `json:"type" validate:"required"`
 }
 
 const (
@@ -40,10 +33,9 @@ var (
 // NewSlackNotifier create new Thug bot
 func NewSlackNotifier(slackToken string, channelID string) *SlackNotifier {
 	slackNotifier := &SlackNotifier{
-		SlackToken:     slackToken,
-		SlackApi:       slack.New(slackToken),
-		ChannelID:      channelID,
-		EndpointStates: make(map[string]EndpointState),
+		SlackToken: slackToken,
+		SlackAPI:   slack.New(slackToken),
+		ChannelID:  channelID,
 	}
 	go slackNotifier.run()
 	return slackNotifier
@@ -77,111 +69,70 @@ func (t *SlackNotifier) help(ev *slack.MessageEvent) (err error) {
 }
 
 func (t *SlackNotifier) run() {
-	t.RTM = t.SlackApi.NewRTM()
+	t.RTM = t.SlackAPI.NewRTM()
 	go t.RTM.ManageConnection()
 
 	for msg := range t.RTM.IncomingEvents {
 		switch ev := msg.Data.(type) {
 		case *slack.ConnectedEvent:
 			t.ID = ev.Info.User.ID
-			log.Println(ev.Info.User.ID, "Connected")
+			log.WithField("bot_id", ev.Info.User.ID).Info("Connected to Slack Channel")
 		case *slack.MessageEvent:
 			t.messageHandler(ev)
 		case *slack.RTMError:
-			log.Println(ev.Error())
+			log.Error("Slack Error", ev.Error())
 		case *slack.InvalidAuthEvent:
-			log.Println("Failed to Authenticate")
+			log.Error("Failed to get authenticated in slack")
 			return
 		default:
 		}
 	}
 }
 
-func (s *SlackNotifier) GetType() string {
+//GetType return what type of notifier is thiss
+func (t SlackNotifier) GetType() string {
 	return "slack"
 }
 
-func (s *SlackNotifier) Notify(results []Result) error {
+//Notify implements notifier interface, send slack message about an event
+func (t SlackNotifier) Notify(result Result) error {
 	params := slack.PostMessageParameters{}
 	params.Attachments = []slack.Attachment{}
 	// decide whether to send announcements or not
-	boolSend := false
-
-	tempState := make(map[string]EndpointState)
-
-	for _, result := range results {
-		state, ok := s.EndpointStates[result.Title]
-		if !ok {
-			state = EndpointState{
-				Name:       result.Title,
-				URL:        result.Endpoint,
-				LastChange: 0,
-				LastStatus: result.Status(),
-			}
+	// If the endpoint is Down
+	switch {
+	case result.Down:
+		attachment := slack.Attachment{
+			Title: result.Name + " is currently down",
+			Text:  result.URL,
+			Color: "danger",
+			Fields: []slack.AttachmentField{
+				slack.AttachmentField{
+					Title: "Event Timestamp",
+					Value: result.Timestamp.Format("2006-01-02-15:04:05"),
+					Short: true,
+				},
+			},
 		}
-		// If the endpoint is Down
-		switch {
-		case result.Down:
-			lastResultTime := time.Unix(0, result.Timestamp)
-			lastChangeTime := time.Unix(0, state.LastChange)
-			diffMinutes := lastResultTime.Sub(lastChangeTime).Minutes()
-			if state.LastStatus == "healthy" || (state.LastStatus == "down" && diffMinutes > 5.0) {
-				boolSend = true
-				attachment := slack.Attachment{
-					Title: result.Title + " is currently down",
-					Text:  result.Endpoint,
-					Color: "danger",
-					Fields: []slack.AttachmentField{
-						slack.AttachmentField{
-							Title: "Last Checked",
-							Value: time.Unix(0, result.Timestamp).Format("2006-01-02-15:04:05"),
-							Short: true,
-						},
-						slack.AttachmentField{
-							Title: "Last Up",
-							Value: time.Unix(0, state.LastChange).Format("2006-01-02-15:04:05"),
-							Short: true,
-						},
-					},
-				}
-				params.Attachments = append(params.Attachments, attachment)
-				state.LastChange = result.Timestamp
-				state.LastStatus = result.Status()
-			}
-		case result.Healthy:
-			if state.LastStatus == "down" {
-				boolSend = true
-				attachment := slack.Attachment{
-					Title: result.Title + " just got resurrected",
-					Text:  result.Endpoint,
-					Color: "good",
-					Fields: []slack.AttachmentField{
-						slack.AttachmentField{
-							Title: "Last Checked",
-							Value: time.Unix(0, result.Timestamp).Format("2006-01-02-15:04:05"),
-							Short: true,
-						},
-						slack.AttachmentField{
-							Title: "Last Down",
-							Value: time.Unix(0, state.LastChange).Format("2006-01-02-15:04:05"),
-							Short: true,
-						},
-					},
-				}
-				params.Attachments = append(params.Attachments, attachment)
-				state.LastChange = result.Timestamp
-				state.LastStatus = result.Status()
-			}
+		params.Attachments = append(params.Attachments, attachment)
+	case result.Healthy:
+		attachment := slack.Attachment{
+			Title: result.Name + " is up",
+			Text:  result.URL,
+			Color: "good",
+			Fields: []slack.AttachmentField{
+				slack.AttachmentField{
+					Title: "Event Timestamp",
+					Value: result.Timestamp.Format("2006-01-02-15:04:05"),
+					Short: true,
+				},
+			},
 		}
-		tempState[result.Title] = state
+		params.Attachments = append(params.Attachments, attachment)
 	}
-
-	s.EndpointStates = tempState
 
 	var err error
-	if boolSend {
-		headerMessage := fmt.Sprintf("<!channel> Service Announcements")
-		_, _, err = s.SlackApi.PostMessage(s.ChannelID, headerMessage, params)
-	}
+	headerMessage := fmt.Sprintf("<!channel> Service Announcements")
+	_, _, err = t.SlackAPI.PostMessage(t.ChannelID, headerMessage, params)
 	return err
 }

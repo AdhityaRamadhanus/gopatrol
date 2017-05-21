@@ -11,12 +11,12 @@ import (
 
 // HTTPChecker implements a Checker for HTTP endpoints.
 type HTTPChecker struct {
+	Slug string `json:"slug" valid:"required"`
 	// Name is the name of the endpoint.
-	Name string `json:"endpoint_name"`
-
+	Name string `json:"name,omitempty" valid:"required"`
 	// URL is the URL of the endpoint.
-	URL string `json:"endpoint_url"`
-
+	URL  string `json:"url,omitempty" valid:"required"`
+	Type string `json:"type,omitempty" valid:"required"`
 	// ThresholdRTT is the maximum round trip time to
 	// allow for a healthy endpoint. If non-zero and a
 	// request takes longer than ThresholdRTT, the
@@ -24,15 +24,12 @@ type HTTPChecker struct {
 	// this duration includes any in-between network
 	// latency.
 	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
-
 	// Attempts is how many requests the client will
 	// make to the endpoint in a single check.
 	Attempts int `json:"attempts,omitempty"`
-
 	// UpStatus is the HTTP status code expected by
 	// a healthy endpoint. Default is http.StatusOK.
 	UpStatus int `json:"up_status,omitempty"`
-
 	// MustContain is a string that the response body
 	// must contain in order to be considered up.
 	// NOTE: If set, the entire response body will
@@ -40,7 +37,6 @@ type HTTPChecker struct {
 	// lots of memory and slowing down checks if the
 	// response body is large.
 	MustContain string `json:"must_contain,omitempty"`
-
 	// MustNotContain is a string that the response
 	// body must NOT contain in order to be considered
 	// up. If both MustContain and MustNotContain are
@@ -49,23 +45,17 @@ type HTTPChecker struct {
 	// has the potential of using lots of memory and
 	// slowing down checks if the response body is large.
 	MustNotContain string `json:"must_not_contain,omitempty"`
-
 	// Client is the http.Client with which to make
 	// requests. If not set, DefaultHTTPClient is
 	// used.
-	Client *http.Client `json:"-"`
-
+	Client *http.Client `json:"-" bson:"-"`
 	// Headers contains headers to added to the request
 	// that is sent for the check
 	Headers http.Header `json:"headers,omitempty"`
-}
 
-func (c HTTPChecker) GetName() string {
-	return c.Name
-}
-
-func (c HTTPChecker) GetURL() string {
-	return c.URL
+	LastChecked time.Time `json:"last_checked"`
+	LastChange  time.Time `json:"last_change"`
+	LastStatus  string    `json:"last_status"`
 }
 
 // Check performs checks using c according to its configuration.
@@ -81,7 +71,7 @@ func (c HTTPChecker) Check() (Result, error) {
 		c.UpStatus = http.StatusOK
 	}
 
-	result := Result{Title: c.Name, Endpoint: c.URL, Timestamp: Timestamp()}
+	result := Result{Name: c.Name, URL: c.URL, Timestamp: time.Now().UTC(), Slug: c.Slug}
 	req, err := http.NewRequest("GET", c.URL, nil)
 	if err != nil {
 		return result, err
@@ -95,11 +85,13 @@ func (c HTTPChecker) Check() (Result, error) {
 
 	result.Times = c.doChecks(req)
 
-	return c.conclude(result), nil
+	result = c.conclude(result)
+	result = c.checkEventAndNotif(result)
+	return result, nil
 }
 
 // doChecks executes req using c.Client and returns each attempt.
-func (c HTTPChecker) doChecks(req *http.Request) Attempts {
+func (c *HTTPChecker) doChecks(req *http.Request) Attempts {
 	checks := make(Attempts, c.Attempts)
 	for i := 0; i < c.Attempts; i++ {
 		start := time.Now()
@@ -144,6 +136,31 @@ func (c HTTPChecker) conclude(result Result) Result {
 	}
 
 	result.Healthy = true
+	c.LastChecked = result.Timestamp
+	c.LastStatus = result.Status()
+	return result
+}
+
+func (c HTTPChecker) checkEventAndNotif(result Result) Result {
+	switch {
+	case result.Down:
+		if c.LastStatus == "healthy" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		} else {
+			lastResultTime := result.Timestamp
+			lastChangeTime := c.LastChange
+			diffMinutes := lastResultTime.Sub(lastChangeTime).Minutes()
+			if c.LastStatus == "down" && diffMinutes > 5.0 {
+				result.Notification = true
+			}
+		}
+	case result.Healthy:
+		if c.LastStatus == "down" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		}
+	}
 	return result
 }
 

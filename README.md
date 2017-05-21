@@ -1,19 +1,21 @@
 # gopatrol
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/AdhityaRamadhanus/gopatrol)](https://goreportcard.com/report/github.com/AdhityaRamadhanus/gopatrol)  
+[![Go Report Card](https://goreportcard.com/badge/github.com/AdhityaRamadhanus/gopatrol)](https://goreportcard.com/report/github.com/AdhityaRamadhanus/gopatrol)  [![Build Status](https://travis-ci.org/AdhityaRamadhanus/gopatrol.svg?branch=refactor-rest)](https://travis-ci.org/AdhityaRamadhanus/gopatrol)
 
-self-hosted endpoint monitoring daemon and status pages based on https://github.com/sourcegraph/checkup
+self-hosted endpoint monitoring daemon with centralized events log using MongoDB based on https://github.com/sourcegraph/checkup
 
 <p>
   <a href="#installation">Installation |</a>
-  <a href="#setting-up-gopatrol-with-fs">Setting FS |</a>
-    <a href="#setting-up-gopatrol-with-s3">Setting S3 |</a>
-  <a href="#setting-endpoints">Setting Endpoints |</a>
-  <a href="#notifier-slack">Notifier |</a>
+  <a href="#setting-up-gopatrol-api-server">Setting API Server |</a>
+  <a href="#setting-up-gopatrol-daemon">Setting Daemon |</a>
+  <a href="#interacting-with-api-using-cli">CLI |</a>
+  <a href="#interacting-with-api-using-dashboard">CLI |</a>
+  <a href="#notifier-slack">Slack Notifier |</a>
+  <a href="#notifier-email">Email Notifier |</a>
   <a href="#licenses">License</a>
   <br><br>
   <blockquote>
-	gopatrol is self-hosted health checks and status pages, written in Go using checkup (instead of using them as dependency i decide to copy the file to this project) and grpc as backend.
+	gopatrol is self-hosted health checks, written in Go using checkup (instead of using them as dependency i decide to copy the file to this project) and restful api to interact with.
 
   There is much work to do for this project to be complete. Use it carefully.
 
@@ -22,10 +24,10 @@ self-hosted endpoint monitoring daemon and status pages based on https://github.
   - Checking HTTP endpoints
   - Checking TCP endpoints (TLS supported)
   - Checking of DNS services & record existence  
-  - Storing results on S3 and local filesystem
-  - Add and delete endpoints on the fly, you don't need to change the config file everytime you decide to add/delete an endpoint
-  - Easy to setup and deploy minimalist status page (100% static)
-  - Get notified via slack and email (soon)
+  - Storing events in MongoDB
+  - Add delete update checkers with dashboard/cli
+  - Easy to setup and deploy
+  - Get notified via slack and email (need help with email notifier)
   </blockquote>
 </p>
 
@@ -35,7 +37,7 @@ Installation
 * make
 ```bash
 NAME:
-   gopatrol-cli - Checkup server cli 
+   gopatrol-cli - gopatrol cli 
 
 USAGE:
    gopatrol-cli [global options] command [command options] [arguments...]
@@ -49,7 +51,7 @@ AUTHOR:
 COMMANDS:
      add-http  Add endpoints to checkup
      add-tcp   Add tcp endpoints to checkup
-     check     list and check endpoints
+     add-dns   Add dns endpoints to checkup
      list      list endpoint
      delete    delete endpoint
      help, h   Shows a list of commands or help for one command
@@ -73,204 +75,57 @@ AUTHOR:
    Adhitya Ramadhanus <adhitya.ramadhanus@gmail.com>
 
 COMMANDS:
-     daemon       run daemon
-     tls-daemon   run tls daemon
-     setup        Setup Daemon and create status page
-     status-page  Serve status page
-     help, h      Shows a list of commands or help for one command
+     daemon   run gopatrol checking daemon
+     api      run gopatrol api server
+     help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --help, -h     show help
    --version, -v  print the version
+
 ```
 
-### Setting up gopatrol with FS
-All you need to do is setup configuration for daemon and status page
+### Setting up gopatrol API Server
 
-1. **Daemon Setup**
+There's 2 different setup configuration for cli and dashboard, you can interact with the api using cli only if you run the api in unix domain socket
+
+For these two setup you also need to set env var, i suggest using .env file to store your config
+
+Example of .env
+```
+MONGODB_URI="mongodb://localhost:27017/gopatrol"
+JWT_SECRET="Something"
+ENV="Development"
+```
+
+1. **Setup For CLI**
   ```bash
-  $ gopatrol setup fs --url=<url to serve the page, with port ex: localhost:80, mycheckup.com:80>
+  $ gopatrol api --log=<log output, stdout, stderr or filename> --proto=unix
   ```
+  it will run on a socket file /tmp/gopatrol.sock
 
-  It will create three directories called caddy_config, checkup_config and statuspage. 
-
-```
-  └───statuspage
-      └───css
-          |   style.css
-          |
-      └───js
-          |   app.min.js
-          |
-      └───images
-          |
-          |   ...
-      └───logs
-          |   ...
-      |   index.html
-      |
-  └───caddy_config
-      └───logs
-          |   
-          |   ...
-      └───errors
-          |   
-          |   ...
-      |   Caddyfile
-      |
-  └───checkup_config
-      |   checkup.json
-      |
-  
-```
-  caddy_config contains Caddyfile, logs and errors folder for caddy webserver
-  checkup_config contains checkup.json
-  statuspage contains the status page web app
-
-  Example of fs storage checkup.json generated by cli 
-  ```json
-  {
-    "checkers": [],
-    "storage": {
-      "provider": "fs",
-      "dir": "statuspage/logs/"
-    }
-  }
+2. **Setup For Dashboard**
+  ```bash
+  $ gopatrol api --log=<log output, stdout, stderr or filename> --proto=http --address=:3000
   ```
+  it will run on port 3000
 
-### Setting up gopatrol with S3
-First you need S3 bucket for this and setting privileges for this bucket, unfortunately gopatrol doesn't support automatic provisioning like checkup so you have to do manual provision https://github.com/sourcegraph/checkup/wiki/Provisioning-S3-Manually
+### Setting up gopatrol daemon
+You also need to set env var for daemon to work mostly for mongodb and slack notifier, i suggest using .env file to store your config
 
-Then, just like with the FS, you need to setup configuration for daemon and status page
+Example of .env
+```
+MONGODB_URI="mongodb://localhost:27017/gopatrol"
+SLACK_TOKEN="xoxb-something-something" //bot users token
+SLACK_CHANNEL="something" // channel ID 
+ENV="Development"
+```
+
 ```bash
-$ gopatrol setup s3 --i=<s3 AccessKeyID> --k=<s3 SecretKey> --r=<s3 Region> --b=<s3 Bucket Name> --url=<url to serve the page, with port ex: localhost:80, mycheckup.com:80>
-```
-It will create three directories called caddy_config, checkup_config and statuspage. 
-
-```
-  └───statuspage
-      └───css
-          |   style.css
-          |
-      └───js
-          |   app.min.js
-          |
-      └───images
-          |
-          |   ...
-      └───logs
-          |   ...
-      |   index.html
-      |
-  └───caddy_config
-      └───logs
-          |   
-          |   ...
-      └───errors
-          |   
-          |   ...
-      |   Caddyfile
-      |
-  └───checkup_config
-      |   checkup.json
-      |
-  
-```
-  caddy_config contains Caddyfile, logs and errors folder for caddy webserver
-  checkup_config contains checkup.json
-  statuspage contains the status page web app
-
-  Example of s3 checkup.json generated by cli 
-  ```json
-  {
-    "checkers":[],
-    "storage": {
-      "provider": "s3",
-      "access_key_id": "<yours>",
-      "secret_access_key": "<yours>",
-      "bucket": "<yours>",
-      "region": "us-east-1"
-    }
-  }
-  ```
-
-Running Daemon
----------------
-```bash
-$ gopatrol daemon 10s
+$ gopatrol daemon --log=<log output, stdout, stderr or filename> interval (10s, 1m, etc)
 ```
 
-Serve Status Page
----------------
-```bash
-$ gopatrol status-page --config=<Path to caddyfile, default to caddy_config/Caddyfile> 
-```
-![checkup](https://cloud.githubusercontent.com/assets/5761975/25096466/888ca154-23ca-11e7-910d-59be4c610989.png)
-
-Setting Endpoints
-----------------
-You can manually add endpoints to the generated checkup.json (see Setting up gopatrol with FS or S3)
-
-Example of such configuration
-
-```json
-{
-	"checkers": [{
-		"type": "http",
-		"endpoint_name": "Example HTTP",
-		"endpoint_url": "http://www.example.com",
-		"attempts": 5
-	},
-	{
-		"type": "tcp",
-		"endpoint_name": "Example TCP",
-		"endpoint_url": "example.com:80",
-		"attempts": 5
-	},
-	{
-		"type": "tcp",
-		"endpoint_name": "Example TCP with TLS enabled and a valid certificate chain",
-		"endpoint_url": "example.com:443",
-		"attempts": 5,
-		"tls": true
-	},
-	{
-		"type": "tcp",
-		"endpoint_name": "Example TCP with TLS enabled and a self-signed certificate chain",
-		"endpoint_url": "example.com:8443",
-		"attempts": 5,
-		"timeout": "2s",
-		"tls": true,
-		"tls_ca_file": "testdata/ca.pem"
-	},
-	{
-		"type": "tcp",
-		"endpoint_name": "Example TCP with TLS enabled and verification disabled",
-		"endpoint_url": "example.com:8443",
-		"attempts": 5,
-		"timeout": "2s",
-		"tls": true,
-		"tls_skip_verify": true
-	},
-	{
-		"type": "dns",
-		"endpoint_name": "Example DNS test of endpoint_url looking up host.example.com",
-		"endpoint_url": "ns.example.com:53",
-		"hostname_fqdn": "host.example.com",
-		"timeout": "2s"
-	}],
-	"storage": {
-		"provider": "s3",
-		"access_key_id": "<yours>",
-		"secret_access_key": "<yours>",
-		"bucket": "<yours>",
-		"region": "us-east-1"
-	}
-}
-```
-
-Or you can add them on the fly when the daemon run
-
+### Interacting with API using CLI
 1. Adding Tcp endpoint
 ```bash
 NAME:
@@ -280,8 +135,6 @@ USAGE:
    gopatrol-cli add-tcp [command options] name url
 
 OPTIONS:
-   --tls                              Send request over tls
-   --host value                       grpc server address (default: "/tmp/gopatrol.sock")
    --attempts value, -a value         how many times to check endpoint (default: 5)
    --thresholdrtt value, --rtt value  Threshold Rtt to define a degraded endpoint (default: 0)
    --tls-enabled                      Enable TLS connection to endpoint
@@ -299,8 +152,6 @@ USAGE:
    gopatrol-cli add-http [command options] name url
 
 OPTIONS:
-   --tls                              Send request over tls
-   --host value                       grpc server address (default: "/tmp/gopatrol.sock")
    --attempts value, -a value         how many times to check endpoint (default: 5)
    --thresholdrtt value, --rtt value  Threshold Rtt to define a degraded endpoint (default: 0)
    --mustcontain value                HTML content that a page should contain to determine whether a page is up or down
@@ -326,23 +177,17 @@ OPTIONS:
    --timeout value                    Timeout to established a tls connection (default: 3000000000)
 ```
 
-Just like adding endpoint, you can either modify the checkup.json or delete them through cli
-
-1. Deleting Endpoint
+4. Deleting Endpoint
 ```bash
 NAME:
    gopatrol-cli delete - delete endpoint
 
 USAGE:
-   gopatrol-cli delete [command options] url
+   gopatrol-cli delete [command options] slug
 
-OPTIONS:
-   --tls         Send request over tls
-   --host value  grpc server address (default: "/tmp/gopatrol.sock")
 ```
 
-List Endpoint
-------------------------
+5. Listing Endpoint
 ```bash
 NAME:
    gopatrol-cli list - list endpoint
@@ -350,55 +195,24 @@ NAME:
 USAGE:
    gopatrol-cli list [command options] [arguments...]
 
-OPTIONS:
-   --tls         Send request over tls
-   --host value  grpc server address (default: "/tmp/gopatrol.sock")
 ```
 
-Check Endpoint
-------------------------
-```bash
-NAME:
-   gopatrol-cli check - list and check endpoints
+### Interacting with API using Dashboard
+Still in progress
 
-USAGE:
-   gopatrol-cli check [command options] [arguments...]
+![dashboard](https://cloud.githubusercontent.com/assets/5761975/26282662/e2fd6ba2-3e3f-11e7-9619-dee0f770e0e3.png)
 
-OPTIONS:
-   --tls         Send request over tls
-   --host value  grpc server address (default: "/tmp/gopatrol.sock")
-```
 
 Notifier (Slack)
 ----------------
-* To use this notifier you need bot integration in your team and channel id where this bot will notify you, refer to this link https://api.slack.com/bot-users
-* Add notifier section to the generated checkup.json
-* Example of checkup.json 
-```json
-{
-	"checkers": [{
-		"type": "tcp",
-		"endpoint_name": "redis",
-		"endpoint_url": "localhost:6379",
-		"attempts": 5
-	}],
-	"storage": {
-		"provider": "fs",
-		"dir": "./checkup_config/logs"
-	},
-  "notifier": {
-      "name": "slack",
-      "token": "your token",
-      "channel": "your channel id"
-  }
-}
-```
+* To use this notifier you need bot integration in your team and channel id where this bot will notify you, refer to this link https://api.slack.com/bot-users 
+* After you get the tokens and channel ID, set it in env var ot use .env file
 
+![slack-notifier](https://cloud.githubusercontent.com/assets/5761975/26282665/ed703178-3e3f-11e7-8335-b9ee78b369e5.png)
 
-Todo
------------
-* Embedding Caddy
-* Email Notifier
+Notifier (Email)
+----------------
+* NIP, not in progress, but definitely in to-do list
 
 License
 ----

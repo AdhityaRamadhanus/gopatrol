@@ -3,29 +3,46 @@ package cli
 import (
 	"context"
 	"log"
+	"net"
+	"net/http"
 
-	checkupservice "github.com/AdhityaRamadhanus/gopatrol/grpc/service"
+	"encoding/json"
+
 	"github.com/urfave/cli"
 )
 
+type checker struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Slug string `json:"slug"`
+}
+
 func listEndpoint(c *cli.Context) error {
-	conn, err := createGrpcClient(c)
+	client := http.Client{
+		Transport: &http.Transport{
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", "/tmp/gopatrol.sock")
+			},
+		},
+	}
+
+	var response *http.Response
+	var err error
+	response, err = client.Get("http://unix/api/v1/checkers/all?pagination=false")
+
 	if err != nil {
-		errMessage := "Couldn't connect to grpc server: " + err.Error()
-		return cli.NewExitError(errMessage, 1)
-	}
-	defer conn.Close()
-	service := checkupservice.NewCheckupClient(conn)
-
-	r, err := service.ListEndpoint(context.Background(), &checkupservice.ListEndpointRequest{Check: false})
-
-	if err != nil {
-		errMessage := "Failed to get endpoint :" + err.Error()
-		return cli.NewExitError(errMessage, 1)
+		log.Println(err)
+		return err
 	}
 
-	for _, endpoint := range r.Endpoints {
-		log.Println(endpoint.Name, " ", endpoint.Url, " ", endpoint.Status)
+	decodedResp := struct {
+		Checkers []checker `json:"checkers"`
+	}{}
+
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&decodedResp); err != nil {
+		log.Println(err)
 	}
+	log.Println(decodedResp.Checkers)
 	return nil
 }

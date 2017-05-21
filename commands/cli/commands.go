@@ -6,18 +6,6 @@ import (
 	cli "github.com/urfave/cli"
 )
 
-var defaultConnFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "tls",
-		Usage: "Send request over tls",
-	},
-	cli.StringFlag{
-		Name:  "host",
-		Value: "/tmp/gopatrol.sock",
-		Usage: "grpc server address",
-	},
-}
-
 var defaultEndpointFlags = []cli.Flag{
 	cli.IntFlag{
 		Name:  "attempts, a",
@@ -39,7 +27,7 @@ var Commands = cli.Commands{
 		Action:    addHTTPEndpoint,
 		UsageText: "checklist add-http [command options] name url",
 		Flags: append(
-			append(defaultConnFlags, defaultEndpointFlags...),
+			defaultEndpointFlags,
 			cli.StringFlag{
 				Name:  "mustcontain",
 				Value: "",
@@ -68,7 +56,7 @@ var Commands = cli.Commands{
 		Action:    addTCPEndpoint,
 		UsageText: "checklist add-http [command options] name url",
 		Flags: append(
-			append(defaultConnFlags, defaultEndpointFlags...),
+			defaultEndpointFlags,
 			cli.BoolFlag{
 				Name:  "tls-enabled",
 				Usage: "Enable TLS connection to endpoint",
@@ -95,7 +83,7 @@ var Commands = cli.Commands{
 		Action:    addDNSEndpoint,
 		UsageText: "checklist add-dns [command options] name url host",
 		Flags: append(
-			append(defaultConnFlags, defaultEndpointFlags...),
+			defaultEndpointFlags,
 			cli.Int64Flag{
 				Name:  "timeout",
 				Value: int64(3 * time.Second),
@@ -104,21 +92,13 @@ var Commands = cli.Commands{
 		),
 	},
 	{
-		Name:   "check",
-		Usage:  "list and check endpoints",
-		Action: checkEndpoint,
-		Flags:  defaultConnFlags,
-	},
-	{
 		Name:   "list",
 		Usage:  "list endpoint",
 		Action: listEndpoint,
-		Flags:  defaultConnFlags,
 	},
 	{
 		Name:   "delete",
 		Usage:  "delete endpoint",
 		Action: deleteEndpoint,
-		Flags:  defaultConnFlags,
 	},
 }

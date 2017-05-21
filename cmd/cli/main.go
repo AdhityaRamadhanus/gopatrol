@@ -5,7 +5,6 @@ import (
 	"os"
 
 	commands "github.com/AdhityaRamadhanus/gopatrol/commands/cli"
-	"github.com/AdhityaRamadhanus/gopatrol/config"
 	"github.com/urfave/cli"
 )
 
@@ -22,15 +21,14 @@ func cmdNotFound(c *cli.Context, command string) {
 
 func main() {
 	// Init Config
-	config.SetDefaultConfig()
 	app := cli.NewApp()
-	app.Name = "checklist"
+	app.Name = "gopatrol-cli"
 	app.Author = "Adhitya Ramadhanus"
 	app.Email = "adhitya.ramadhanus@gmail.com"
 
 	app.Commands = commands.Commands
 	app.CommandNotFound = cmdNotFound // Inspired by docker machine
-	app.Usage = "Checkup server cli "
+	app.Usage = "gopatrol cli "
 	app.Version = "1.0.0"
 
 	if err := app.Run(os.Args); err != nil {

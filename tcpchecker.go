@@ -11,12 +11,12 @@ import (
 
 // TCPChecker implements a Checker for TCP endpoints.
 type TCPChecker struct {
+	Slug string `json:"slug" valid:"required"`
 	// Name is the name of the endpoint.
-	Name string `json:"endpoint_name"`
-
+	Name string `json:"name,omitempty" valid:"required"`
 	// URL is the URL of the endpoint.
-	URL string `json:"endpoint_url"`
-
+	URL  string `json:"url,omitempty" valid:"required"`
+	Type string `json:"type,omitempty" valid:"required"`
 	// ThresholdRTT is the maximum round trip time to
 	// allow for a healthy endpoint. If non-zero and a
 	// request takes longer than ThresholdRTT, the
@@ -24,34 +24,24 @@ type TCPChecker struct {
 	// this duration includes any in-between network
 	// latency.
 	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
-
 	// Attempts is how many requests the client will
 	// make to the endpoint in a single check.
 	Attempts int `json:"attempts,omitempty"`
-
 	// TLSEnabled controls whether to enable TLS or not.
 	// If set, TLS is enabled.
 	TLSEnabled bool `json:"tls,omitempty"`
-
 	// TLSSkipVerify controls whether to skip server TLS
 	// certificat validation or not.
 	TLSSkipVerify bool `json:"tls_skip_verify,omitempty"`
-
 	// TLSCAFile is the Certificate Authority used
 	// to validate the server TLS certificate.
 	TLSCAFile string `json:"tls_ca_file,omitempty"`
-
 	// Timeout is the maximum time to wait for a
 	// TCP connection to be established.
-	Timeout time.Duration `json:"timeout,omitempty"`
-}
-
-func (c TCPChecker) GetName() string {
-	return c.Name
-}
-
-func (c TCPChecker) GetURL() string {
-	return c.URL
+	Timeout     time.Duration `json:"timeout,omitempty"`
+	LastChecked time.Time     `json:"last_checked"`
+	LastChange  time.Time     `json:"last_change"`
+	LastStatus  string        `json:"last_status"`
 }
 
 // Check performs checks using c according to its configuration.
@@ -61,10 +51,12 @@ func (c TCPChecker) Check() (Result, error) {
 		c.Attempts = 1
 	}
 
-	result := Result{Title: c.Name, Endpoint: c.URL, Timestamp: Timestamp()}
+	result := Result{Name: c.Name, URL: c.URL, Timestamp: time.Now().UTC(), Slug: c.Slug}
 	result.Times = c.doChecks()
 
-	return c.conclude(result), nil
+	result = c.conclude(result)
+	result = c.checkEventAndNotif(result)
+	return result, nil
 }
 
 // doChecks executes and returns each attempt.
@@ -123,13 +115,14 @@ func (c TCPChecker) doChecks() Attempts {
 // computes remaining values needed to fill out the result.
 // It detects degraded (high-latency) responses and makes
 // the conclusion about the result's status.
-func (c TCPChecker) conclude(result Result) Result {
+func (c *TCPChecker) conclude(result Result) (res Result) {
 	result.ThresholdRTT = c.ThresholdRTT
 
 	// Check errors (down)
 	for i := range result.Times {
 		if result.Times[i].Error != "" {
 			result.Down = true
+			result.Message = result.URL + " is down"
 			return result
 		}
 	}
@@ -145,5 +138,29 @@ func (c TCPChecker) conclude(result Result) Result {
 	}
 
 	result.Healthy = true
+	result.Message = result.URL + " is healthy"
+	return result
+}
+
+func (c *TCPChecker) checkEventAndNotif(result Result) Result {
+	switch {
+	case result.Down:
+		if c.LastStatus == "healthy" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		} else {
+			lastResultTime := result.Timestamp
+			lastChangeTime := c.LastChange
+			diffMinutes := lastResultTime.Sub(lastChangeTime).Minutes()
+			if c.LastStatus == "down" && diffMinutes > 5.0 {
+				result.Notification = true
+			}
+		}
+	case result.Healthy:
+		if c.LastStatus == "down" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		}
+	}
 	return result
 }

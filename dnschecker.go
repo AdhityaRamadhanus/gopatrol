@@ -10,10 +10,12 @@ import (
 
 // DNSChecker implements a Checker for TCP endpoints.
 type DNSChecker struct {
+	Slug string `json:"slug" valid:"required"`
 	// Name is the name of the endpoint.
-	Name string `json:"endpoint_name"`
-	// This is the name of the DNS server you are testing.
-	URL string `json:"endpoint_url"`
+	Name string `json:"name,omitempty" valid:"required"`
+	// URL is the URL of the endpoint.
+	URL  string `json:"url,omitempty" valid:"required"`
+	Type string `json:"type,omitempty" valid:"required"`
 	// ThresholdRTT is the maximum round trip time to
 	// allow for a healthy endpoint. If non-zero and a
 	// request takes longer than ThresholdRTT, the
@@ -23,21 +25,14 @@ type DNSChecker struct {
 	ThresholdRTT time.Duration `json:"threshold_rtt,omitempty"`
 	// Attempts is how many requests the client will
 	// make to the endpoint in a single check.
-	Attempts int `json:"attempts,omitempty"`
-
-	// This is the fqdn of the target server to query the DNS server for.
-	Host string `json:"hostname_fqdn,omitempty"`
+	Attempts int    `json:"attempts,omitempty"` // This is the fqdn of the target server to query the DNS server for.
+	Host     string `json:"hostname_fqdn,omitempty"`
 	// Timeout is the maximum time to wait for a
 	// TCP connection to be established.
-	Timeout time.Duration `json:"timeout,omitempty"`
-}
-
-func (c DNSChecker) GetName() string {
-	return c.Name
-}
-
-func (c DNSChecker) GetURL() string {
-	return c.URL
+	Timeout     time.Duration `json:"timeout,omitempty"`
+	LastChecked time.Time     `json:"last_checked"`
+	LastChange  time.Time     `json:"last_change"`
+	LastStatus  string        `json:"last_status"`
 }
 
 // Check performs checks using c according to its configuration.
@@ -46,11 +41,11 @@ func (c DNSChecker) Check() (Result, error) {
 	if c.Attempts < 1 {
 		c.Attempts = 1
 	}
-
-	result := Result{Title: c.Name, Endpoint: c.URL, Timestamp: Timestamp()}
+	result := Result{Name: c.Name, URL: c.URL, Timestamp: time.Now().UTC(), Slug: c.Slug}
 	result.Times = c.doChecks()
-
-	return c.conclude(result), nil
+	result = c.conclude(result)
+	result = c.checkEventAndNotif(result)
+	return result, nil
 }
 
 // doChecks executes and returns each attempt.
@@ -102,7 +97,7 @@ func (c DNSChecker) doChecks() Attempts {
 // computes remaining values needed to fill out the result.
 // It detects degraded (high-latency) responses and makes
 // the conclusion about the result's status.
-func (c DNSChecker) conclude(result Result) Result {
+func (c *DNSChecker) conclude(result Result) Result {
 	result.ThresholdRTT = c.ThresholdRTT
 
 	// Check errors (down)
@@ -124,5 +119,28 @@ func (c DNSChecker) conclude(result Result) Result {
 	}
 
 	result.Healthy = true
+	return result
+}
+
+func (c DNSChecker) checkEventAndNotif(result Result) Result {
+	switch {
+	case result.Down:
+		if c.LastStatus == "healthy" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		} else {
+			lastResultTime := result.Timestamp
+			lastChangeTime := c.LastChange
+			diffMinutes := lastResultTime.Sub(lastChangeTime).Minutes()
+			if c.LastStatus == "down" && diffMinutes > 5.0 {
+				result.Notification = true
+			}
+		}
+	case result.Healthy:
+		if c.LastStatus == "down" || c.LastStatus == "" {
+			result.Notification = true
+			result.Event = true
+		}
+	}
 	return result
 }

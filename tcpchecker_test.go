@@ -32,11 +32,11 @@ func TestTCPChecker(t *testing.T) {
 	if err != nil {
 		t.Errorf("Didn't expect an error: %v", err)
 	}
-	if got, want := result.Title, testName; got != want {
-		t.Errorf("Expected result.Title='%s', got '%s'", want, got)
+	if got, want := result.Name, testName; got != want {
+		t.Errorf("Expected result.Name='%s', got '%s'", want, got)
 	}
-	if got, want := result.Endpoint, endpt; got != want {
-		t.Errorf("Expected result.Endpoint='%s', got '%s'", want, got)
+	if got, want := result.URL, endpt; got != want {
+		t.Errorf("Expected result.URL='%s', got '%s'", want, got)
 	}
 	if got, want := result.Down, false; got != want {
 		t.Errorf("Expected result.Down=%v, got %v", want, got)
@@ -50,7 +50,7 @@ func TestTCPChecker(t *testing.T) {
 	if got, want := len(result.Times), hc.Attempts; got != want {
 		t.Errorf("Expected %d attempts, got %d", want, got)
 	}
-	ts := time.Unix(0, result.Timestamp)
+	ts := result.Timestamp
 	if time.Since(ts) > 5*time.Second {
 		t.Errorf("Expected timestamp to be recent, got %s", ts)
 	}
@@ -157,7 +157,7 @@ func TestTCPCheckerWithTLSNoVerify(t *testing.T) {
 				return
 			}
 			// Keep connection open for enough time to complete test
-			conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
+			conn.SetDeadline(time.Now().Add(1000 * time.Millisecond))
 			tmp := make([]byte, 1)
 			conn.Read(tmp)
 		}
@@ -174,11 +174,11 @@ func TestTCPCheckerWithTLSNoVerify(t *testing.T) {
 		t.Errorf("Didn't expect an error: %v", err)
 	}
 
-	if got, want := result.Title, testName; got != want {
-		t.Errorf("Expected result.Title='%s', got '%s'", want, got)
+	if got, want := result.Name, testName; got != want {
+		t.Errorf("Expected result.Name='%s', got '%s'", want, got)
 	}
-	if got, want := result.Endpoint, endpt; got != want {
-		t.Errorf("Expected result.Endpoint='%s', got '%s'", want, got)
+	if got, want := result.URL, endpt; got != want {
+		t.Errorf("Expected result.URL='%s', got '%s'", want, got)
 	}
 	if got, want := result.Down, false; got != want {
 		t.Errorf("Expected result.Down=%v, got %v", want, got)
@@ -192,7 +192,7 @@ func TestTCPCheckerWithTLSNoVerify(t *testing.T) {
 	if got, want := len(result.Times), hc.Attempts; got != want {
 		t.Errorf("Expected %d attempts, got %d", want, got)
 	}
-	ts := time.Unix(0, result.Timestamp)
+	ts := result.Timestamp
 	if time.Since(ts) > 5*time.Second {
 		t.Errorf("Expected timestamp to be recent, got %s", ts)
 	}
@@ -261,7 +261,7 @@ func TestTCPCheckerWithTLSVerifySuccess(t *testing.T) {
 				return
 			}
 			// Keep connection open for enough time to complete test
-			conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
+			conn.SetDeadline(time.Now().Add(1000 * time.Millisecond))
 			tmp := make([]byte, 1)
 			conn.Read(tmp)
 		}
@@ -278,11 +278,11 @@ func TestTCPCheckerWithTLSVerifySuccess(t *testing.T) {
 		t.Errorf("Didn't expect an error: %v", err)
 	}
 
-	if got, want := result.Title, testName; got != want {
-		t.Errorf("Expected result.Title='%s', got '%s'", want, got)
+	if got, want := result.Name, testName; got != want {
+		t.Errorf("Expected result.Name='%s', got '%s'", want, got)
 	}
-	if got, want := result.Endpoint, endpt; got != want {
-		t.Errorf("Expected result.Endpoint='%s', got '%s'", want, got)
+	if got, want := result.URL, endpt; got != want {
+		t.Errorf("Expected result.URL='%s', got '%s'", want, got)
 	}
 	if got, want := result.Down, false; got != want {
 		t.Errorf("Expected result.Down=%v, got %v", want, got)
@@ -296,7 +296,7 @@ func TestTCPCheckerWithTLSVerifySuccess(t *testing.T) {
 	if got, want := len(result.Times), hc.Attempts; got != want {
 		t.Errorf("Expected %d attempts, got %d", want, got)
 	}
-	ts := time.Unix(0, result.Timestamp)
+	ts := result.Timestamp
 	if time.Since(ts) > 5*time.Second {
 		t.Errorf("Expected timestamp to be recent, got %s", ts)
 	}
@@ -365,7 +365,7 @@ func TestTCPCheckerWithTLSVerifyError(t *testing.T) {
 				return
 			}
 			// Keep connection open for enough time to complete test
-			conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
+			conn.SetDeadline(time.Now().Add(1000 * time.Millisecond))
 			tmp := make([]byte, 1)
 			conn.Read(tmp)
 		}
@@ -382,11 +382,11 @@ func TestTCPCheckerWithTLSVerifyError(t *testing.T) {
 		t.Errorf("Didn't expect an error: %v", err)
 	}
 
-	if got, want := result.Title, testName; got != want {
-		t.Errorf("Expected result.Title='%s', got '%s'", want, got)
+	if got, want := result.Name, testName; got != want {
+		t.Errorf("Expected result.Name='%s', got '%s'", want, got)
 	}
-	if got, want := result.Endpoint, endpt; got != want {
-		t.Errorf("Expected result.Endpoint='%s', got '%s'", want, got)
+	if got, want := result.URL, endpt; got != want {
+		t.Errorf("Expected result.URL='%s', got '%s'", want, got)
 	}
 	if got, want := result.Down, true; got != want {
 		t.Errorf("Expected result.Down=%v, got %v", want, got)
@@ -397,7 +397,7 @@ func TestTCPCheckerWithTLSVerifyError(t *testing.T) {
 	if got, want := len(result.Times), hc.Attempts; got != want {
 		t.Errorf("Expected %d attempts, got %d", want, got)
 	}
-	ts := time.Unix(0, result.Timestamp)
+	ts := result.Timestamp
 	if time.Since(ts) > 5*time.Second {
 		t.Errorf("Expected timestamp to be recent, got %s", ts)
 	}

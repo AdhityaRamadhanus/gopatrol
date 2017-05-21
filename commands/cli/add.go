@@ -4,8 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
+	"net/http"
+	"time"
 
-	checkupservice "github.com/AdhityaRamadhanus/gopatrol/grpc/service"
+	"encoding/json"
+
+	"bytes"
+
+	"github.com/AdhityaRamadhanus/gopatrol"
 	"github.com/urfave/cli"
 )
 
@@ -16,39 +23,52 @@ func addHTTPEndpoint(c *cli.Context) error {
 		endpointName = c.Args().Get(0)
 		endpointURL = c.Args().Get(1)
 	} else {
-		fmt.Println("Please provice name and url to add http endpoint")
+		fmt.Println("Please provice name and url to add http checker")
 		cli.ShowCommandHelp(c, "add-http")
 		return cli.NewExitError("", 1)
 	}
-
-	request := &checkupservice.AddHttpEndpointRequest{
-		Endpoint: &checkupservice.GenericEndpointRequest{
-			Name:         endpointName,
-			Url:          endpointURL,
-			Attempts:     int32(c.Int("attempts")),
-			Thresholdrtt: c.Int64("thresholdrtt"),
+	client := http.Client{
+		Transport: &http.Transport{
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", "/tmp/gopatrol.sock")
+			},
 		},
+	}
+
+	checkerReq := gopatrol.HTTPChecker{
+		Type:           "http",
+		Name:           endpointName,
+		URL:            endpointURL,
+		Attempts:       c.Int("attempts"),
+		ThresholdRTT:   time.Duration(c.Int64("thresholdrtt")),
 		MustContain:    c.String("mustcontain"),
 		MustNotContain: c.String("mustnotcontain"),
-		Headers:        c.String("headers"),
-		Upstatus:       int32(c.Int("upstatus")),
+		UpStatus:       c.Int("upstatus"),
 	}
 
-	conn, err := createGrpcClient(c)
+	jsonReq, _ := json.Marshal(checkerReq)
+
+	var response *http.Response
+	var err error
+	response, err = client.Post("http://unix/api/v1/checkers/create", "application/json", bytes.NewReader(jsonReq))
 	if err != nil {
-		errMessage := "Couldn't connect to grpc server: " + err.Error()
-		return cli.NewExitError(errMessage, 1)
+		log.Println(err)
+		return err
 	}
-	defer conn.Close()
-	service := checkupservice.NewCheckupClient(conn)
 
-	r, err := service.AddHTTPEndpoint(context.Background(), request)
+	decodedResp := map[string]interface{}{}
 
-	if err != nil {
-		errMessage := "Failed to add http endpoint :" + err.Error()
-		return cli.NewExitError(errMessage, 1)
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&decodedResp); err != nil {
+		log.Println(err)
 	}
-	log.Println(r.Message)
+	switch response.StatusCode {
+	case 200:
+		log.Println(response.StatusCode, decodedResp["message"])
+	default:
+		log.Println(decodedResp["error"])
+	}
+
 	return nil
 }
 
@@ -63,35 +83,44 @@ func addTCPEndpoint(c *cli.Context) error {
 		cli.ShowCommandHelp(c, "add-tcp")
 		return cli.NewExitError("", 1)
 	}
-
-	request := &checkupservice.AddTcpEndpointRequest{
-		Endpoint: &checkupservice.GenericEndpointRequest{
-			Name:         endpointName,
-			Url:          endpointURL,
-			Attempts:     int32(c.Int("attempts")),
-			Thresholdrtt: c.Int64("thresholdrtt"),
+	client := http.Client{
+		Transport: &http.Transport{
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", "/tmp/gopatrol.sock")
+			},
 		},
-		TlsEnabled:    c.Bool("tls-enabled"),
-		TlsCaFile:     c.String("tls-ca"),
-		TlsSkipVerify: c.Bool("tls-skip-verify"),
-		Timeout:       c.Int64("timeout"),
 	}
 
-	conn, err := createGrpcClient(c)
+	checkerReq := gopatrol.TCPChecker{
+		Type:          "tcp",
+		Name:          endpointName,
+		URL:           endpointURL,
+		Attempts:      c.Int("attempts"),
+		ThresholdRTT:  time.Duration(c.Int64("thresholdrtt")),
+		TLSEnabled:    c.Bool("tls-enabled"),
+		TLSCAFile:     c.String("tls-ca"),
+		TLSSkipVerify: c.Bool("tls-skip-verify"),
+		Timeout:       time.Duration(c.Int64("timeout")),
+	}
+
+	jsonReq, _ := json.Marshal(checkerReq)
+
+	var response *http.Response
+	var err error
+	response, err = client.Post("http://unix/api/v1/checkers/create", "application/json", bytes.NewReader(jsonReq))
+
 	if err != nil {
-		errMessage := "Couldn't connect to grpc server: " + err.Error()
-		return cli.NewExitError(errMessage, 1)
+		log.Println(err)
+		return err
 	}
-	defer conn.Close()
-	service := checkupservice.NewCheckupClient(conn)
+	decodedResp := map[string]interface{}{}
 
-	r, err := service.AddTCPEndpoint(context.Background(), request)
-
-	if err != nil {
-		errMessage := "Failed to add tcp endpoint :" + err.Error()
-		return cli.NewExitError(errMessage, 1)
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&decodedResp); err != nil {
+		log.Println(err)
 	}
-	log.Println(r.Message)
+	log.Println(decodedResp["message"])
+
 	return nil
 }
 
@@ -110,31 +139,41 @@ func addDNSEndpoint(c *cli.Context) error {
 		return cli.NewExitError("", 1)
 	}
 
-	request := &checkupservice.AddDNSEndpointRequest{
-		Endpoint: &checkupservice.GenericEndpointRequest{
-			Name:         endpointName,
-			Url:          endpointURL,
-			Attempts:     int32(c.Int("attempts")),
-			Thresholdrtt: c.Int64("thresholdrtt"),
+	client := http.Client{
+		Transport: &http.Transport{
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", "/tmp/gopatrol.sock")
+			},
 		},
-		Hostname: endpointHost,
-		Timeout:  c.Int64("timeout"),
 	}
 
-	conn, err := createGrpcClient(c)
+	checkerReq := gopatrol.DNSChecker{
+		Type:         "dns",
+		Name:         endpointName,
+		URL:          endpointURL,
+		Attempts:     c.Int("attempts"),
+		ThresholdRTT: time.Duration(c.Int64("thresholdrtt")),
+		Timeout:      time.Duration(c.Int64("timeout")),
+		Host:         endpointHost,
+	}
+
+	jsonReq, _ := json.Marshal(checkerReq)
+
+	var response *http.Response
+	var err error
+	response, err = client.Post("http://unix/api/v1/checkers/create", "application/json", bytes.NewReader(jsonReq))
+
 	if err != nil {
-		errMessage := "Couldn't connect to grpc server: " + err.Error()
-		return cli.NewExitError(errMessage, 1)
+		log.Println(err)
+		return err
 	}
-	defer conn.Close()
-	service := checkupservice.NewCheckupClient(conn)
+	decodedResp := map[string]interface{}{}
 
-	r, err := service.AddDNSEndpoint(context.Background(), request)
-
-	if err != nil {
-		errMessage := "Failed to add dns endpoint :" + err.Error()
-		return cli.NewExitError(errMessage, 1)
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&decodedResp); err != nil {
+		log.Println(err)
 	}
-	log.Println(r.Message)
+	log.Println(decodedResp["message"])
+
 	return nil
 }

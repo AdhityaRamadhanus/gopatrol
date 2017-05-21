@@ -2,38 +2,55 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net"
+	"net/http"
 
-	checkupservice "github.com/AdhityaRamadhanus/gopatrol/grpc/service"
+	"bytes"
+
 	"github.com/urfave/cli"
 )
 
 func deleteEndpoint(c *cli.Context) error {
-	endpointURL := ""
+	endpointSlug := ""
+
 	if c.NArg() > 0 {
-		endpointURL = c.Args().Get(0)
+		endpointSlug = c.Args().Get(0)
 	} else {
-		fmt.Println("Please provice endpoint url to delete")
+		fmt.Println("Please provide endpoint slug")
 		cli.ShowCommandHelp(c, "delete")
 		return cli.NewExitError("", 1)
 	}
-	conn, err := createGrpcClient(c)
-	if err != nil {
-		errMessage := "Couldn't connect to grpc server: " + err.Error()
-		return cli.NewExitError(errMessage, 1)
-	}
-	defer conn.Close()
-	service := checkupservice.NewCheckupClient(conn)
 
-	r, err := service.DeleteEndpoint(context.Background(), &checkupservice.DeleteEndpointRequest{
-		Url: endpointURL,
-	})
-	if err != nil {
-		errMessage := "Failed to delete endpoint :" + err.Error()
-		return cli.NewExitError(errMessage, 1)
+	client := http.Client{
+		Transport: &http.Transport{
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", "/tmp/gopatrol.sock")
+			},
+		},
 	}
 
-	log.Println(r.Message)
+	// jsonReq, _ := json.Marshal(checkerReq)
+
+	var response *http.Response
+	var err error
+	url := "http://unix/api/v1/checkers/" + endpointSlug + "/delete"
+	log.Println(url)
+	response, err = client.Post(url, "application/json", bytes.NewReader(nil))
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	decodedResp := map[string]interface{}{}
+
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&decodedResp); err != nil {
+		log.Println(err)
+		return err
+	}
+	log.Println(decodedResp)
 	return nil
 }

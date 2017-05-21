@@ -1,0 +1,14 @@
+before_script:
+  - sleep 15
+  - mongo mydb_test --eval 'db.addUser("travis", "test");'
+language: go
+go:
+  - 1.8.x
+env:
+  - ENV=Testing
+services:
+  - mongodb
+branches:
+  only:
+  - master
+sudo: required

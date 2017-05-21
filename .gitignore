@@ -47,3 +47,5 @@ templates/imagesred.go
 templates/imagesyellow.go
 templates/s3js.go
 templates/statuspagejs.go
+
+.env
